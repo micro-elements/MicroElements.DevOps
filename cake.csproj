@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Cake.CoreCLR" Version="0.26.1" />
+    <PackageReference Include="Cake.Bakery" Version="0.2.0" />
+  </ItemGroup>
+</Project>
