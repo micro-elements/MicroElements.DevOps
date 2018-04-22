@@ -5,6 +5,17 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 
+
+var root = Directory("./");
+var repoDir = root;
+
+var rootDirName = MakeAbsolute(root).GetDirectoryName();
+Information($"Root directory id {rootDirName}");
+var projectName = Argument("projectName", rootDirName);
+
+var srcDir = repoDir + Directory("src");
+var testDir = repoDir + Directory("test");
+
 ///////////////////////////////////////////////////////////////////////////////
 // SETUP / TEARDOWN
 ///////////////////////////////////////////////////////////////////////////////
@@ -30,15 +41,9 @@ Task("Default")
    Information("Hello Cake!");
 });
 
-var root = Directory("./");
-
-var repoDir = root;
-
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 Task("CreateProjectStructure")
 .Does(() => {
-    var srcDir = repoDir + Directory("src");
-    var testDir = repoDir + Directory("test");
 
     if(DirectoryExists(srcDir))
         Information("src already exists.");
@@ -110,8 +115,38 @@ Task("GitIgnore")
     }
 });
 
+Task("CreateProjects")
+.Does(() => {
+    var projectDir = srcDir + Directory(projectName);
+
+    if(DirectoryExists(projectDir))
+        Information("projectDir already exists.");
+    else
+    {
+        CreateDirectory(projectDir);
+        Information("projectDir created.");
+    }
+
+    DotNetCoreTool(projectDir.Path.FullPath, "new", 
+        new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
+
+    projectDir = testDir + Directory(projectName+".Tests");
+
+    if(DirectoryExists(projectDir))
+        Information("projectDir already exists.");
+    else
+    {
+        CreateDirectory(projectDir);
+        Information("projectDir created.");
+    }
+
+    DotNetCoreTool(projectDir.Path.FullPath, "new", 
+        new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
+});
+
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
-    .IsDependentOn("GitIgnore");
+    .IsDependentOn("GitIgnore")
+    .IsDependentOn("CreateProjects");
 
 RunTarget(target);
