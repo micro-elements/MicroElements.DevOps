@@ -66,7 +66,7 @@ $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/0.26.1/Cake.dll"
 
 # Restore Cake
-&dotnet restore .\cake.csproj --packages .\tools
+&dotnet restore .\cake.props --packages .\tools
 
 # Build Cake arguments
 $cakeArguments = @("$Script");
