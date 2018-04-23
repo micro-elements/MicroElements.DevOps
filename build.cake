@@ -165,9 +165,37 @@ Task("CreateProjects")
         .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
 });
 
+Task("SourceLink")
+.Does(() => {
+    Information("Adding SourceLink.");
+
+    string dirBuildPropsText = @"<Project>
+  <ItemGroup>
+    <PackageReference Include=""SourceLink.Create.CommandLine"" Version=""2.8.0"" PrivateAssets=""All"" /> 
+  </ItemGroup>
+</Project>";
+
+    System.IO.File.WriteAllText(srcDir + File("Directory.Build.props"), dirBuildPropsText); 
+});
+
+Task("Build")
+.Does(() => {
+    Information("TODO Build");
+});
+
+Task("Test")
+.Does(() => {
+    Information("TODO Test");
+});
+
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("GitIgnore")
-    .IsDependentOn("CreateProjects");
+    .IsDependentOn("CreateProjects")
+    .IsDependentOn("SourceLink");
+
+Task("Default")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test");
 
 RunTarget(target);
