@@ -154,12 +154,32 @@ Task("SourceLink")
 
 Task("Build")
 .Does(() => {
-    Information("TODO Build");
+	var settings = new DotNetCoreBuildSettings 
+    { 
+        Configuration = configuration,
+        ArgumentCustomization =
+          args => args
+            .Append("/p:SourceLinkCreate=true")
+    };
+    var projects = GetFiles("./src/**/*.csproj");
+    foreach(var project in projects)
+    {
+        DotNetCoreBuild(project.FullPath, settings);
+    }
 });
 
 Task("Test")
 .Does(() => {
-    Information("TODO Test");
+    var test_projects = GetFiles("./test/**/*.csproj");
+    foreach(var test_project in test_projects)
+    {
+        var testSettings = new DotNetCoreTestSettings()
+        {
+            Configuration = configuration,
+            NoBuild = true
+        };
+        DotNetCoreTest(test_project.FullPath, testSettings);
+    }
 });
 
 Task("Init")
