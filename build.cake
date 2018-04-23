@@ -5,7 +5,6 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 
-
 var root = Directory("./");
 var repoDir = root;
 
@@ -35,6 +34,12 @@ Teardown(ctx =>
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
+
+Task("Info")
+.Does(() => {
+   Information("Info");
+   StartProcess("dotnet", "--info");
+});
 
 Task("Default")
 .Does(() => {
@@ -127,21 +132,37 @@ Task("CreateProjects")
         Information("projectDir created.");
     }
 
+    // dotnet new classlib
     DotNetCoreTool(projectDir.Path.FullPath, "new", 
         new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
 
-    projectDir = testDir + Directory(projectName+".Tests");
+    var testProjectDir = testDir + Directory(projectName+".Tests");
 
-    if(DirectoryExists(projectDir))
-        Information("projectDir already exists.");
+    if(DirectoryExists(testProjectDir))
+        Information("testProjectDir already exists.");
     else
     {
-        CreateDirectory(projectDir);
-        Information("projectDir created.");
+        CreateDirectory(testProjectDir);
+        Information("testProjectDir created.");
     }
 
-    DotNetCoreTool(projectDir.Path.FullPath, "new", 
+    // dotnet new test project
+    DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
         new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
+
+    // dotnet new sln
+    DotNetCoreTool(rootDirName, "new", 
+        new ProcessArgumentBuilder().Append("sln").Append($"--name {projectName}") );
+
+    // dotnet sln add
+    StartProcess("dotnet", new ProcessSettings()
+        .UseWorkingDirectory(root)
+        .WithArguments(arguments=>arguments.Append($"sln add {projectDir}/{projectName}.csproj")));
+    
+    // dotnet sln add
+    StartProcess("dotnet", new ProcessSettings()
+        .UseWorkingDirectory(root)
+        .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
 });
 
 Task("Init")
