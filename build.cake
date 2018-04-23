@@ -9,42 +9,16 @@ var root = Directory("./");
 var repoDir = root;
 
 var rootDirName = MakeAbsolute(root).GetDirectoryName();
-Information($"Root directory id {rootDirName}");
 var projectName = Argument("projectName", rootDirName);
 
 var srcDir = repoDir + Directory("src");
 var testDir = repoDir + Directory("test");
 
-///////////////////////////////////////////////////////////////////////////////
-// SETUP / TEARDOWN
-///////////////////////////////////////////////////////////////////////////////
-
-Setup(ctx =>
-{
-   // Executed BEFORE the first task.
-   Information("Running tasks...");
-});
-
-Teardown(ctx =>
-{
-   // Executed AFTER the last task.
-   Information("Finished running tasks.");
-});
+Information($"Root directory id {rootDirName}");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
-
-Task("Info")
-.Does(() => {
-   Information("Info");
-   StartProcess("dotnet", "--info");
-});
-
-Task("Default")
-.Does(() => {
-   Information("Hello Cake!");
-});
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 Task("CreateProjectStructure")
