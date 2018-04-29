@@ -86,7 +86,7 @@ Task("GitIgnore")
         }
 
         System.IO.File.WriteAllText(gitIgnoreFileName, gitIgnoreChanged);
-        Information(message);        
+        Information(message);
     }
     else
     {
@@ -147,6 +147,10 @@ Task("SourceLink")
   <ItemGroup>
     <PackageReference Include=""SourceLink.Create.CommandLine"" Version=""2.8.0"" PrivateAssets=""All"" /> 
   </ItemGroup>
+  <PropertyGroup>
+    <DebugType>embedded</DebugType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 </Project>";
 
     System.IO.File.WriteAllText(srcDir + File("Directory.Build.props"), dirBuildPropsText); 
@@ -154,7 +158,7 @@ Task("SourceLink")
 
 Task("Build")
 .Does(() => {
-	var settings = new DotNetCoreBuildSettings 
+    var settings = new DotNetCoreBuildSettings 
     { 
         Configuration = configuration,
         ArgumentCustomization =
