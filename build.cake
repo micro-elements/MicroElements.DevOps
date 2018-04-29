@@ -186,6 +186,25 @@ Task("Test")
     }
 });
 
+
+#load ./scripts/package.cake
+Task("PackCurrentProjectByNuspec")
+.Does(() => {
+    var packSettings = new NuGetPackSettings()
+    {
+        Id = "MicroElements.DevOps",
+        OutputDirectory = "./artifacts",
+        BasePath = Directory("./")
+    };
+    CleanDirectory("./artifacts");
+    
+    CopyDirectory("./resources", "./artifacts/resources");
+    CopyDirectory("./scripts", "./artifacts/scripts");
+    CopyDirectory("./templates", "./artifacts/templates");
+    
+    DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
+});
+
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("GitIgnore")
