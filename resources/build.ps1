@@ -50,7 +50,7 @@ if(!(Test-Path $cake_props_path))
 &dotnet restore $cake_props_path --packages $TOOLS_DIR
 
 # Build Cake arguments
-# $Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
+$Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
 
 $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
