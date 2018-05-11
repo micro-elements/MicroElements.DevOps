@@ -6,22 +6,20 @@
 #load ./init.cake
 #load ./package.cake
 
-var target = Argument("target", "Default");
-var configuration = Argument("configuration", "Release");
-var rootDir = Argument("rootDir", "./");
+var target          = Argument("target", "Default");
+var configuration   = Argument("configuration", "Release");
+var rootDir         = Argument("rootDir", "./");
 
 ScriptArgs args = new ScriptArgs();
 args.Root = Directory(rootDir);
 args.SrcDir = args.Root + Directory("src");
 args.TestDir = args.Root + Directory("test");
 
-var rootAbs = MakeAbsolute(args.Root);
-
-var tools = Directory("./tools");
+var tools = args.Root + Directory("tools");
 
 var resources = tools + Directory("microelements.devops") + Directory("0.1.0") + Directory("resources");
 
-var projectDirName = rootAbs.GetDirectoryName();
+var projectDirName = args.Root.Path.GetDirectoryName();
 var projectName = Argument("projectName", projectDirName);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,9 +29,9 @@ var projectName = Argument("projectName", projectDirName);
 Task("Info")
 .Does(() => {
     Information("MicroElements DevOps scripts.");
-    Information($"rootDir: {rootDir}");
-    Information($"root: {rootAbs}");
+    Information($"args.Root: {args.Root}");
     Information($"projectDirName: {projectDirName}");
+    Information($"projectName: {projectName}");
 });
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
@@ -126,8 +124,9 @@ Task("CreateProjects")
         new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
 
     // dotnet new sln
-    DotNetCoreTool(args.Root.Path.FullPath, "new", 
-        new ProcessArgumentBuilder().Append("sln").Append($"--name {projectName}") );
+    StartProcess("dotnet", new ProcessSettings()
+        .UseWorkingDirectory(args.Root)
+        .WithArguments(arguments=>arguments.Append($"new sln --name {projectName}")));
 
     // dotnet sln add
     StartProcess("dotnet", new ProcessSettings()
@@ -215,6 +214,7 @@ Task("PackCurrentProjectByNuspec")
 });
 
 Task("Init")
+    .IsDependentOn("Info")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("GitIgnore")
     .IsDependentOn("CreateProjects")
