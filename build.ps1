@@ -21,7 +21,6 @@ if(!$PSScriptRoot){
 }
 
 $CAKE_VERSION = "0.26.1"
-$DEVOPS_VERSION = "0.1.0"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
@@ -34,23 +33,20 @@ $cake_props = @"
 <ItemGroup>
   <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
   <PackageReference Include="Cake.Bakery" Version="0.2.0" />
-  <PackageReference Include="MicroElements.DevOps" Version="$DEVOPS_VERSION" />
 </ItemGroup>
 </Project>
 "@
 
-$cake_props_path = ".\cake.props"
+$cake_props_path = ".\tools\cake.props"
 
 if(!(Test-Path $cake_props_path))
 {
+    New-Item -ItemType Directory -Force -Path $TOOLS_DIR
     $cake_props >> $cake_props_path
 }
 
 # Restore Cake
 &dotnet restore $cake_props_path --packages $TOOLS_DIR
-
-# Build Cake arguments
-# $Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
 
 $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
