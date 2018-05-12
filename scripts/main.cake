@@ -10,17 +10,10 @@ var target          = Argument("target", "Default");
 var configuration   = Argument("configuration", "Release");
 var rootDir         = Argument("rootDir", "./");
 
-ScriptArgs args = new ScriptArgs();
-args.Root = Directory(rootDir);
-args.SrcDir = args.Root + Directory("src");
-args.TestDir = args.Root + Directory("test");
-
-var tools = args.Root + Directory("tools");
-
-var resources = tools + Directory("microelements.devops") + Directory("0.1.0") + Directory("resources");
+ScriptArgs args = new ScriptArgs(Context, Directory(rootDir));
 
 var projectDirName = args.Root.Path.GetDirectoryName();
-var projectName = Argument("projectName", projectDirName);
+var projectName     = Argument("projectName", projectDirName);
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -36,9 +29,7 @@ Task("Info")
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 Task("CreateProjectStructure")
-.Does(() => {
-    CreateProjectStructure(Context, args);
-});
+.Does(() => CreateProjectStructure(Context, args));
 
 Task("CheckOrDownloadGitIgnore")
 .Description("Checks that gitignore exists. If not exists downloads from github")
@@ -103,11 +94,11 @@ Task("CreateProjects")
     {
         CreateDirectory(projectDir);
         Information("projectDir created.");
-    }
 
-    // dotnet new classlib
-    DotNetCoreTool(projectDir.Path.FullPath, "new", 
-        new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
+        // dotnet new classlib
+        DotNetCoreTool(projectDir.Path.FullPath, "new", 
+            new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
+    }
 
     var testProjectDir = args.TestDir + Directory(projectName+".Tests");
 
@@ -117,26 +108,34 @@ Task("CreateProjects")
     {
         CreateDirectory(testProjectDir);
         Information("testProjectDir created.");
+
+        // dotnet new test project
+        DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
+            new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
     }
 
-    // dotnet new test project
-    DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
-        new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
+    var slnFile = args.Root + File($"{projectName}.sln");
+    if(!FileExists(slnFile))
+    {
+        // dotnet new sln
+        StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"new sln --name {projectName}")));
 
-    // dotnet new sln
-    StartProcess("dotnet", new ProcessSettings()
-        .UseWorkingDirectory(args.Root)
-        .WithArguments(arguments=>arguments.Append($"new sln --name {projectName}")));
-
-    // dotnet sln add
-    StartProcess("dotnet", new ProcessSettings()
-        .UseWorkingDirectory(args.Root)
-        .WithArguments(arguments=>arguments.Append($"sln add {projectDir}/{projectName}.csproj")));
-    
-    // dotnet sln add
-    StartProcess("dotnet", new ProcessSettings()
-        .UseWorkingDirectory(args.Root)
-        .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
+        // dotnet sln add
+        StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"sln add {projectDir}/{projectName}.csproj")));
+        
+        // dotnet sln add
+        StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
+    }
+    else
+    {
+        Information($"Solution file {slnFile} already exists.");
+    }
 });
 
 Task("SourceLink")
@@ -159,9 +158,12 @@ Task("SourceLink")
 Task("EditorConfig")
 .Does(() => {
     Information("Adding EditorConfig.");
-    var file = resources + File(".editorconfig");
+    var file = args.ResourcesDir + File(".editorconfig");
     CopyFileToDirectory(file, args.Root);
 });
+
+Task("CreateCommonProjectFiles")
+.Does(() => CreateCommonProjectFiles(args));
 
 Task("Build")
 .Does(() => {
@@ -199,7 +201,9 @@ Task("Init")
     .IsDependentOn("GitIgnore")
     .IsDependentOn("CreateProjects")
     .IsDependentOn("EditorConfig")
-    .IsDependentOn("SourceLink");
+    .IsDependentOn("SourceLink")
+    .IsDependentOn("CreateCommonProjectFiles")
+;
 
 Task("Default")
     .IsDependentOn("Build")

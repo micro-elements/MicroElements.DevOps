@@ -2,7 +2,7 @@
 // ARGUMENTS
 ///////////////////////////////////////////////////////////////////////////////
 
-var target = Argument("target", "Info");
+var target = Argument("target", "Default");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -10,12 +10,11 @@ var target = Argument("target", "Info");
 
 //see: https://github.com/cake-build/cake/issues/1527
 #load ./scripts/package.cake
-Task("PackCurrentProjectByNuspec")
+Task("Package")
 .Does(() => {
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
-        Version = "0.2.0",
         OutputDirectory = "./artifacts",
         BasePath = Directory("./")
     };
@@ -27,5 +26,9 @@ Task("PackCurrentProjectByNuspec")
  
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
 });
+
+Task("Default")
+    .IsDependentOn("Package")
+;
 
 RunTarget(target);

@@ -2,9 +2,12 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>MicroElements.DevOps</id>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <description>DevOps scripts for CI and CD</description>
-    <authors>Alexey Petryashev</authors>
+    <authors>alexey.petriashev</authors>
+    <projectUrl>https://github.com/micro-elements/MicroElements.DevOps</projectUrl>
+    <licenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/LICENSE</licenseUrl>
+    <iconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</iconUrl>
   </metadata>
   <files>
     <file src="resources\*.*" target="resources" />

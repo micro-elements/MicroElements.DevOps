@@ -19,3 +19,17 @@ public static void CreateProjectStructure(ICakeContext context, ScriptArgs args)
         context.Information("test created.");
     }
 }
+
+public static void CreateCommonProjectFiles(ScriptArgs args)
+{
+    var context = args.Context;
+    var version_props_file_name = args.Root + context.File("version.props");
+    if(context.FileExists(version_props_file_name))
+        context.Information("version.props file already exists.");
+    else
+    {
+        var version_props_content = ReadTemplate(args, "version.props.xml");
+        System.IO.File.WriteAllText(version_props_file_name, version_props_content);
+        context.Information("version.props created.");
+    }
+}
