@@ -1,8 +1,10 @@
+#load ./scripts/main.cake
+
 ///////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 ///////////////////////////////////////////////////////////////////////////////
 
-var target = Argument("target", "Default");
+//var target = Argument("target", "Info");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -15,6 +17,7 @@ Task("PackCurrentProjectByNuspec")
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
+        Version = "0.2.0",
         OutputDirectory = "./artifacts",
         BasePath = Directory("./")
     };
