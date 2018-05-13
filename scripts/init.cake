@@ -32,4 +32,24 @@ public static void CreateCommonProjectFiles(ScriptArgs args)
         System.IO.File.WriteAllText(version_props_file_name, version_props_content);
         context.Information("version.props created.");
     }
+
+    //todo: for all projects in src add <Import Project="..\..\version.props"/>
+    context.Information("Adding version.props import...");
+    context.Information("Processing files: "+args.SrcDir.Path + "/**/*.csproj");
+    var projectFiles = context.GetFiles(args.SrcDir.Path + "/**/*.csproj");
+    foreach(var projectFile in projectFiles)
+    {
+        context.Information($"Processing file: {projectFile}");
+        var lines = System.IO.File.ReadAllLines(projectFile.FullPath).ToList();
+        var import = @"<Import Project=""..\..\version.props""/>";
+        var containsImport = lines.FirstOrDefault(line=>line.Contains(import))!=null;
+        if(!containsImport)
+        {
+            lines.Insert(1, $"  {import}");
+            System.IO.File.WriteAllLines(projectFile.FullPath, lines);
+            context.Information($"Project: {projectFile}; Import inserted: {import}");
+        }
+        else
+            context.Information($"Project: {projectFile}; Import already exists: {import}");
+    }
 }
