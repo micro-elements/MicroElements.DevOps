@@ -23,6 +23,7 @@ public static void CreateProjectStructure(ICakeContext context, ScriptArgs args)
 public static void CreateCommonProjectFiles(ScriptArgs args)
 {
     var context = args.Context;
+
     var version_props_file_name = args.Root + context.File("version.props");
     if(context.FileExists(version_props_file_name))
         context.Information("version.props file already exists.");
@@ -33,15 +34,25 @@ public static void CreateCommonProjectFiles(ScriptArgs args)
         context.Information("version.props created.");
     }
 
-    //todo: for all projects in src add <Import Project="..\..\version.props"/>
-    context.Information("Adding version.props import...");
+    var common_props_file_name = args.Root + context.File("common.props");
+    if(context.FileExists(common_props_file_name))
+        context.Information("common.props file already exists.");
+    else
+    {
+        var common_props_content = ReadTemplate(args, "common.props.xml");
+        // todo: fill common props
+        System.IO.File.WriteAllText(common_props_file_name, common_props_content);
+        context.Information("common.props created.");
+    }
+
+    context.Information("Adding common.props import...");
     context.Information("Processing files: "+args.SrcDir.Path + "/**/*.csproj");
     var projectFiles = context.GetFiles(args.SrcDir.Path + "/**/*.csproj");
     foreach(var projectFile in projectFiles)
     {
         context.Information($"Processing file: {projectFile}");
         var lines = System.IO.File.ReadAllLines(projectFile.FullPath).ToList();
-        var import = @"<Import Project=""..\..\version.props""/>";
+        var import = @"<Import Project=""..\..\common.props""/>";
         var containsImport = lines.FirstOrDefault(line=>line.Contains(import))!=null;
         if(!containsImport)
         {
