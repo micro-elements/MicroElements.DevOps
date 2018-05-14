@@ -1,4 +1,4 @@
-
+/// <summary>ScriptArgs is args for interscript communication.</summary> 
 public class ScriptArgs
 {
     public ICakeContext Context {get;}
@@ -9,6 +9,8 @@ public class ScriptArgs
     public ConvertableDirectoryPath ToolsDir;
     public ConvertableDirectoryPath ResourcesDir;
     public ConvertableDirectoryPath TemplatesDir;
+
+    public ConvertableDirectoryPath BuildDir;
 
     public Dictionary<string,object> Params;
 
@@ -24,6 +26,25 @@ public class ScriptArgs
         ResourcesDir = devops_tool_dir + context.Directory("resources");
         TemplatesDir = devops_tool_dir + context.Directory("templates");
     }
+}
+
+/// <summary>Returns command line argument or environment variable or default value.</summary>
+public static T ArgumentOrEnvVar<T>(ICakeContext context, string name, T defaultValue, T[] variants = null, bool secret = false)
+{
+    var result = context.HasArgument(name) ? context.Argument<T>(name, default(T)) 
+        : context.HasEnvironmentVariable(name) ? (T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T))
+        : defaultValue;
+    var varSource = context.HasArgument(name)? "Argument" : context.HasEnvironmentVariable(name)? "EnvironmentVariable" : "DefaultValue";
+    var resultText = secret? "***" : $"{result}";   
+    context.Information($"VARIABLE: {name}={resultText}; SOURCE: {varSource}");
+    var comparer = EqualityComparer<T>.Default;
+    if(variants!=null && !variants.Contains(result, comparer) && !comparer.Equals(result,defaultValue))
+    {
+        var errorMessage = $"Value '{result}' is not allowed. Use one of: {string.Join(",", variants)}";
+        context.Error(errorMessage);
+        throw new Exception(errorMessage);
+    }
+    return result;
 }
 
 public static string GetVersionFromCommandLineArgs(ICakeContext context)

@@ -5,15 +5,49 @@
 #load common.cake
 #load init.cake
 #load package.cake
+#load versioning.cake
 
-var target          = Argument("target", "Default");
-var configuration   = Argument("configuration", "Release");
 var rootDir         = Argument("rootDir", "./");
+var buildDir        = Argument<string>("buildDir", null);
+ScriptArgs args     = new ScriptArgs(Context, Directory(rootDir));
 
-ScriptArgs args = new ScriptArgs(Context, Directory(rootDir));
+var target                  = ArgumentOrEnvVar(Context, "target", "Default");
+var configuration           = ArgumentOrEnvVar(Context, "configuration", "Release", new []{"Release", "Debug"});
+var projectName             = Argument("projectName", args.Root.Path.GetDirectoryName());
+var upload_nuget            = ArgumentOrEnvVar(Context, "upload_nuget", "https://api.nuget.org/v3/index.json");
+var upload_nuget_api_key    = ArgumentOrEnvVar(Context, "upload_nuget_api_key", "00000000-0000-0000-0000-000000000000", secret: true);
+var nuget_source1           = ArgumentOrEnvVar(Context, "nuget_source1", "https://api.nuget.org/v3/index.json");
+var nuget_source2           = ArgumentOrEnvVar<string>(Context, "nuget_source2", null);
+var nuget_source3           = ArgumentOrEnvVar<string>(Context, "nuget_source3", null);
 
-var projectDirName = args.Root.Path.GetDirectoryName();
-var projectName     = Argument("projectName", projectDirName);
+// any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
+var runtimeName             = ArgumentOrEnvVar(Context, "runtimeName", "any", new []{"any", "linux-x64", "win-x64"});
+
+//////////////////////////////////////////////////////////////////////
+// CONVENTIONS
+//////////////////////////////////////////////////////////////////////
+
+var version_props_file = args.Root + File("version.props");
+var solutionFile = args.Root + File($"{projectName}.sln");
+
+args.BuildDir = args.BuildDir ?? args.Root + Directory("build") + Directory(configuration);
+var testResultsDir = buildDir + Directory("test-results");
+var artifactsDir = buildDir + Directory("artifacts");
+
+// Reading version
+var versionInfo = Versioning.ReadVersion(Context, version_props_file);
+Information($"VERSION:{versionInfo.VersionPrefix}");
+
+//////////////////////////////////////////////////////////////////////
+// TOOL ARGUMENTS 
+//////////////////////////////////////////////////////////////////////
+
+var nugetSourcesArg = new string[]{nuget_source1, nuget_source2, nuget_source3, upload_nuget}.Where(s => s != null).Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
+var runtimeArg = runtimeName != "any" ? $" --runtime {runtimeName}" : "";
+
+var sourceLinkArgs =" /p:SourceLinkCreate=true";
+var noSourceLinkArgs =" /p:SourceLinkCreate=false";
+var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -23,7 +57,6 @@ Task("Info")
 .Does(() => {
     Information("MicroElements DevOps scripts.");
     Information($"args.Root: {args.Root}");
-    Information($"projectDirName: {projectDirName}");
     Information($"projectName: {projectName}");
 });
 
