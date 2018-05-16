@@ -7,6 +7,14 @@ var target = Argument("target", "Default");
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
+#load ./scripts/init.cake
+
+Task("Info")
+.Does(() => {
+    Information("MicroElements DevOps scripts.");
+    ScriptArgs args = new ScriptArgs(Context, Directory("./"));
+    FillProjectAttributes(args);
+});
 
 //see: https://github.com/cake-build/cake/issues/1527
 #load ./scripts/package.cake

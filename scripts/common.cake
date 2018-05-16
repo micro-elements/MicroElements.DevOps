@@ -12,7 +12,7 @@ public class ScriptArgs
 
     public ConvertableDirectoryPath BuildDir;
 
-    public Dictionary<string,object> Params;
+    public Dictionary<string,object> Params = new Dictionary<string,object>(StringComparer.InvariantCultureIgnoreCase);
 
     public ScriptArgs(ICakeContext context, ConvertableDirectoryPath root)
     {
@@ -26,6 +26,21 @@ public class ScriptArgs
         ResourcesDir = devops_tool_dir + context.Directory("resources");
         TemplatesDir = devops_tool_dir + context.Directory("templates");
     }
+}
+
+public static T Argument<T>(ScriptArgs args, string name, T defaultValue)
+{
+    var result = args.Context.Argument<T>(name, defaultValue);
+    args.Params[name] = result;
+    return result;
+}
+
+/// <summary>Returns command line argument or environment variable or default value. Result stores to ScriptArgs.Params</summary>
+public static T ArgumentOrEnvVar<T>(ScriptArgs args, string name, T defaultValue, T[] variants = null, bool secret = false)
+{
+    var result = ArgumentOrEnvVar<T>(args.Context, name, defaultValue, variants);
+    args.Params[name] = result;
+    return result;
 }
 
 /// <summary>Returns command line argument or environment variable or default value.</summary>
@@ -65,7 +80,8 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
             //C:\Projects\ProjName\tools\microelements.devops\0.2.0\scripts\main.cake
             var segments = context.File(arg).Path.Segments;
             int index = System.Array.IndexOf(segments, "microelements.devops");
-            devops_version = segments[index+1];
+            if(index>0 && index<segments.Length-1)
+                devops_version = segments[index+1];
         }       
     }
 

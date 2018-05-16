@@ -40,7 +40,10 @@ public static void CreateCommonProjectFiles(ScriptArgs args)
     else
     {
         var common_props_content = ReadTemplate(args, "common.props.xml");
-        // todo: fill common props
+        // common props filling
+        FillProjectAttributes(args);
+        common_props_content = FillTags(common_props_content, args);
+
         System.IO.File.WriteAllText(common_props_file_name, common_props_content);
         context.Information("common.props created.");
     }
@@ -63,4 +66,70 @@ public static void CreateCommonProjectFiles(ScriptArgs args)
         else
             context.Information($"Project: {projectFile}; Import already exists: {import}");
     }
+}
+
+public static void FillProjectAttributes(ScriptArgs args)
+{
+    /*
+    <Product></Product>
+    <Copyright></Copyright>
+    <Authors></Authors>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <RepositoryType></RepositoryType>
+    <RepositoryUrl></RepositoryUrl>
+    */
+
+    var result = ProcessUtils.StartProcessAndReturnOutput(args.Context, "git", "remote get-url origin");
+    if(result.ExitCode==0)
+    {
+        args.Params.Add("RepositoryType", "git");
+        //Ex: https://github.com/micro-elements/MicroElements.DevOps
+        var repoUrl = result.Output.TrimEnd();
+        args.Params.Add("RepositoryUrl", repoUrl);
+        args.Params.Add("PackageProjectUrl", repoUrl);
+
+        var segments = repoUrl.Split('/');
+        var serverIndex = Array.IndexOf(segments, "github.com");
+        if(serverIndex>0&&serverIndex<segments.Length-2)
+        {
+            var userName = segments[serverIndex+1];
+            args.Params["userName"] = userName;
+
+            var projectName = segments[serverIndex+2];
+            if(!args.Params.ContainsKey("projectName"))
+                args.Params["projectName"] = projectName;
+
+            //<PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/LICENSE</PackageLicenseUrl>
+            args.Params["PackageLicenseUrl"] = $"https://raw.githubusercontent.com/{userName}/{projectName}/master/LICENSE";
+        }
+
+        if(args.Params.ContainsKey("projectName"))
+        {
+            args.Params["Product"] = args.Params["projectName"];
+            args.Params["Copyright"] = $"{DateTime.Today.Year}";
+        }
+
+        //Authors
+        if(args.Params.ContainsKey("userName"))
+        {
+            args.Params["Authors"] = args.Params["userName"];
+        }
+    }
+
+    foreach (var param in args.Params)
+    {
+        args.Context.Information($"{param.Key}: {param.Value}");
+    }
+    
+}
+
+public static string FillTags(string inputXml, ScriptArgs args)
+{
+    foreach (var key in args.Params.Keys)
+    {
+        inputXml = inputXml.Replace($"<{key}></{key}>", $"{args.Params[key]}");
+    }
+    return inputXml;
 }

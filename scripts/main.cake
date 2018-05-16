@@ -11,17 +11,17 @@ var rootDir         = Argument("rootDir", "./");
 var buildDir        = Argument<string>("buildDir", null);
 ScriptArgs args     = new ScriptArgs(Context, Directory(rootDir));
 
-var target                  = ArgumentOrEnvVar(Context, "target", "Default");
-var configuration           = ArgumentOrEnvVar(Context, "configuration", "Release", new []{"Release", "Debug"});
-var projectName             = Argument("projectName", args.Root.Path.GetDirectoryName());
-var upload_nuget            = ArgumentOrEnvVar(Context, "upload_nuget", "https://api.nuget.org/v3/index.json");
-var upload_nuget_api_key    = ArgumentOrEnvVar(Context, "upload_nuget_api_key", "00000000-0000-0000-0000-000000000000", secret: true);
-var nuget_source1           = ArgumentOrEnvVar(Context, "nuget_source1", "https://api.nuget.org/v3/index.json");
-var nuget_source2           = ArgumentOrEnvVar<string>(Context, "nuget_source2", null);
-var nuget_source3           = ArgumentOrEnvVar<string>(Context, "nuget_source3", null);
+var target                  = ArgumentOrEnvVar(args, "target", "Default");
+var configuration           = ArgumentOrEnvVar(args, "configuration", "Release", new []{"Release", "Debug"});
+var projectName             = Argument(args, "projectName", args.Root.Path.GetDirectoryName());
+var upload_nuget            = ArgumentOrEnvVar(args, "upload_nuget", "https://api.nuget.org/v3/index.json");
+var upload_nuget_api_key    = ArgumentOrEnvVar(args, "upload_nuget_api_key", "00000000-0000-0000-0000-000000000000", secret: true);
+var nuget_source1           = ArgumentOrEnvVar(args, "nuget_source1", "https://api.nuget.org/v3/index.json");
+var nuget_source2           = ArgumentOrEnvVar<string>(args, "nuget_source2", null);
+var nuget_source3           = ArgumentOrEnvVar<string>(args, "nuget_source3", null);
 
 // any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
-var runtimeName             = ArgumentOrEnvVar(Context, "runtimeName", "any", new []{"any", "linux-x64", "win-x64"});
+var runtimeName             = ArgumentOrEnvVar(args, "runtimeName", "any", new []{"any", "linux-x64", "win-x64"});
 
 //////////////////////////////////////////////////////////////////////
 // CONVENTIONS
@@ -58,6 +58,7 @@ Task("Info")
     Information("MicroElements DevOps scripts.");
     Information($"args.Root: {args.Root}");
     Information($"projectName: {projectName}");
+    FillProjectAttributes(args);
 });
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
