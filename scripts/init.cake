@@ -129,7 +129,7 @@ public static string FillTags(string inputXml, ScriptArgs args)
 {
     foreach (var key in args.Params.Keys)
     {
-        inputXml = inputXml.Replace($"<{key}></{key}>", $"{args.Params[key]}");
+        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.Params[key]}</{key}>");
     }
     return inputXml;
 }

@@ -58,7 +58,6 @@ Task("Info")
     Information("MicroElements DevOps scripts.");
     Information($"args.Root: {args.Root}");
     Information($"projectName: {projectName}");
-    FillProjectAttributes(args);
 });
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
