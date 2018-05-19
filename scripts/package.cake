@@ -74,8 +74,9 @@ public class DotNetUtils
         var packSettings = new DotNetCorePackSettings()
         {
             OutputDirectory = settings.OutputDirectory,
-            WorkingDirectory = "./"
+            WorkingDirectory = "./",
         };
+        //todo: settings.ReleaseNotes
         context.DotNetCorePack(nugetCsprojFileName.FullPath, packSettings);
 
         //context.DeleteFile(nugetCsprojFileName);

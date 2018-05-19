@@ -122,13 +122,13 @@ public static void FillProjectAttributes(ScriptArgs args)
     {
         args.Context.Information($"{param.Key}: {param.Value}");
     }
-    
 }
 
 public static string FillTags(string inputXml, ScriptArgs args)
 {
     foreach (var key in args.Params.Keys)
     {
+        inputXml = inputXml.Replace($"$<{key}>$", $"<{args.Params[key]}");
         inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.Params[key]}</{key}>");
     }
     return inputXml;

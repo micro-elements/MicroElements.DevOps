@@ -1,3 +1,7 @@
+# 0.4.0
+- Common props created
+- Added: fill common props from github 
+
 # 0.3.0
 - Create version.props
 - GetVersionFromCommandLineArgs, ReadTemplate
