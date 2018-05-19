@@ -26,6 +26,36 @@ public class ScriptArgs
         ResourcesDir = devops_tool_dir + context.Directory("resources");
         TemplatesDir = devops_tool_dir + context.Directory("templates");
     }
+
+    public void DumpParams()
+    {
+        foreach (var param in Params)
+        {
+            Context.Information($"{param.Key}: {param.Value}");
+        }
+    }
+
+    public object GetParam(string name)
+    {
+        if(!Params.ContainsKey(name))
+            throw new Exception($"Parameter {name} is not exists. Fill it before use.");
+        return Params[name];
+    }
+
+    public string GetStringParam(string name)
+    {
+        return $"{GetParam(name)}";
+    }
+
+    public bool GetBoolParam(string name)
+    {
+        var value = GetParam(name);
+        if(value is bool)
+            return (bool)value;
+        if(value is string)
+            return Convert.ToBoolean(value);
+        throw new Exception($"Param {name} has value {value} that cannot be converted to bool.");
+    }
 }
 
 public static T Argument<T>(ScriptArgs args, string name, T defaultValue)
@@ -94,6 +124,16 @@ public static string ReadTemplate(ScriptArgs args, string fileName)
     templateFileName = templateFileName.Path.IsRelative? args.TemplatesDir + templateFileName : templateFileName;
     string templateText = System.IO.File.ReadAllText(templateFileName.Path.FullPath);
     return templateText;
+}
+
+public static string FillTags(string inputXml, ScriptArgs args)
+{
+    foreach (var key in args.Params.Keys)
+    {
+        inputXml = inputXml.Replace($"$<{key}>$", $"<{args.Params[key]}");
+        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.Params[key]}</{key}>");
+    }
+    return inputXml;
 }
 
 public class ProcessUtils

@@ -1,5 +1,5 @@
 
-#load ./common.cake
+#load common.cake
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 public static void CreateProjectStructure(ICakeContext context, ScriptArgs args)
@@ -17,6 +17,38 @@ public static void CreateProjectStructure(ICakeContext context, ScriptArgs args)
     {
         context.CreateDirectory(args.TestDir);
         context.Information("test created.");
+    }
+}
+
+public static void AddBuildProps(ScriptArgs args)
+{
+    var context = args.Context;
+    string name = "Directory.Build.props";
+
+    var file_name = args.SrcDir + context.File(name);
+    if(context.FileExists(file_name))
+        context.Information($"{name} file already exists.");
+    else
+    {
+        var content = ReadTemplate(args, $"{name}.xml");
+        System.IO.File.WriteAllText(file_name, content);
+        context.Information($"{name} created.");
+    }
+}
+
+public static void AddEditorConfig(ScriptArgs args)
+{
+    var context = args.Context;
+    string name = ".editorconfig";
+    var file_name = args.Root + context.File(name);
+
+    if(context.FileExists(file_name))
+        context.Information($"{name} file already exists.");
+    else
+    {
+        context.Information("Adding EditorConfig.");
+        var fileOrigin = args.ResourcesDir + context.File(".editorconfig");
+        context.CopyFileToDirectory(fileOrigin, args.Root);
     }
 }
 
@@ -116,20 +148,122 @@ public static void FillProjectAttributes(ScriptArgs args)
         {
             args.Params["Authors"] = args.Params["userName"];
         }
-    }
 
-    foreach (var param in args.Params)
-    {
-        args.Context.Information($"{param.Key}: {param.Value}");
+        args.DumpParams();
     }
 }
 
-public static string FillTags(string inputXml, ScriptArgs args)
+/// <summary>
+/// Checks that gitignore exists. If not exists downloads from github.
+/// </summary>
+public static void CheckOrDownloadGitIgnore(ScriptArgs args)
 {
-    foreach (var key in args.Params.Keys)
+    var context = args.Context;
+    var gitIgnoreFile = args.Root + context.File(".gitignore");
+    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
+    var gitIgnoreExternalPath = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore";
+
+    if(context.FileExists(gitIgnoreFile.Path))
     {
-        inputXml = inputXml.Replace($"$<{key}>$", $"<{args.Params[key]}");
-        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.Params[key]}</{key}>");
+        context.Information(".gitignore exists.");
     }
-    return inputXml;
+    else
+    {
+        context.DownloadFile(gitIgnoreExternalPath, gitIgnoreFile);
+        context.Information($".gitignore downloaded from {gitIgnoreExternalPath}.");
+    }   
+}
+
+/// <summary>
+/// Adds cake rule to gitignore.
+/// </summary>
+public static void GitIgnoreAddCakeRule(ScriptArgs args)
+{
+    var context = args.Context;
+    var gitIgnoreFile = args.Root + context.File(".gitignore");
+    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
+    var cakeRule = "tools/**";
+    var cakeRuleCommented = "# tools/**";
+
+    if(context.FileExists(gitIgnoreFile.Path))
+    {  
+        var gitIgnoreText = System.IO.File.ReadAllText(gitIgnoreFileName);
+        if(gitIgnoreText.Contains(cakeRule) && !gitIgnoreText.Contains(cakeRuleCommented))
+        {
+            context.Information(".gitignore already has cake rules.");
+            return;
+        }
+
+        var message = $"uncommented {cakeRule} in .gitignore.";
+        var gitIgnoreChanged = gitIgnoreText.Replace(cakeRuleCommented, cakeRule);
+        if(gitIgnoreChanged==gitIgnoreText)
+        {
+            message = $"added {cakeRule} to .gitignore.";
+            gitIgnoreChanged = gitIgnoreText + Environment.NewLine + cakeRule;
+        }
+
+        System.IO.File.WriteAllText(gitIgnoreFileName, gitIgnoreChanged);
+        context.Information(message);
+    }
+    else
+    {
+        context.Information(".gitignore does not exists. Download it from 'https://github.com/github/gitignore/blob/master/VisualStudio.gitignore'");
+    }
+}
+
+public static void CreateProjects(ScriptArgs args)
+{
+    var context = args.Context;
+    var projectName = args.GetStringParam("projectName");
+    var solutionFile = args.GetStringParam("solutionFile");
+
+    var projectDir = args.SrcDir + context.Directory(projectName);
+
+    if(context.DirectoryExists(projectDir))
+        context.Information("projectDir already exists.");
+    else
+    {
+        context.CreateDirectory(projectDir);
+        context.Information("projectDir created.");
+
+        // dotnet new classlib
+        context.DotNetCoreTool(projectDir.Path.FullPath, "new", 
+            new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
+    }
+
+    var testProjectDir = args.TestDir + context.Directory(projectName+".Tests");
+
+    if(context.DirectoryExists(testProjectDir))
+        context.Information("testProjectDir already exists.");
+    else
+    {
+        context.CreateDirectory(testProjectDir);
+        context.Information("testProjectDir created.");
+
+        // dotnet new test project
+        context.DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
+            new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
+    }
+
+    if(!context.FileExists(solutionFile))
+    {
+        // dotnet new sln
+        context.StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"new sln --name {projectName}")));
+
+        // dotnet sln add
+        context.StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"sln add {projectDir}/{projectName}.csproj")));
+        
+        // dotnet sln add
+        context.StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.Root)
+            .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
+    }
+    else
+    {
+        context.Information($"Solution file {solutionFile} already exists.");
+    }
 }

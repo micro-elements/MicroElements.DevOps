@@ -61,6 +61,7 @@ Task("Info")
     Information("MicroElements DevOps scripts.");
     Information($"args.Root: {args.Root}");
     Information($"projectName: {projectName}");
+    args.DumpParams();
 });
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
@@ -69,133 +70,20 @@ Task("CreateProjectStructure")
 
 Task("CheckOrDownloadGitIgnore")
 .Description("Checks that gitignore exists. If not exists downloads from github")
-.Does(() => {
-    var gitIgnoreFile = args.Root + File(".gitignore");
-    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
-    var gitIgnoreExternalPath = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore";
+.Does(() => CheckOrDownloadGitIgnore(args));
 
-    if(FileExists(gitIgnoreFile.Path))
-    {
-        Information(".gitignore exists.");
-    }
-    else
-    {
-        DownloadFile(gitIgnoreExternalPath, gitIgnoreFile);
-        Information($".gitignore downloaded from {gitIgnoreExternalPath}.");
-    }
-});
-
-Task("GitIgnore")
-.IsDependentOn("CheckOrDownloadGitIgnore")
+Task("GitIgnoreAddCakeRule")
 .Description("Adds cake rules to gitignore")
-.Does(() => {
-    var gitIgnoreFile = args.Root + File(".gitignore");
-    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
-    var cakeRule = "tools/**";
-    var cakeRuleCommented = "# tools/**";
-
-    if(FileExists(gitIgnoreFile.Path))
-    {  
-        var gitIgnoreText = System.IO.File.ReadAllText(gitIgnoreFileName);
-        if(gitIgnoreText.Contains(cakeRule) && !gitIgnoreText.Contains(cakeRuleCommented))
-        {
-            Information(".gitignore already has cake rules.");
-            return;
-        }
-
-        var message = $"uncommented {cakeRule} in .gitignore.";
-        var gitIgnoreChanged = gitIgnoreText.Replace(cakeRuleCommented, cakeRule);
-        if(gitIgnoreChanged==gitIgnoreText)
-        {
-            message = $"added {cakeRule} to .gitignore.";
-            gitIgnoreChanged = gitIgnoreText + Environment.NewLine + cakeRule;
-        }
-
-        System.IO.File.WriteAllText(gitIgnoreFileName, gitIgnoreChanged);
-        Information(message);
-    }
-    else
-    {
-        Information(".gitignore does not exists. Download it from 'https://github.com/github/gitignore/blob/master/VisualStudio.gitignore'");
-    }
-});
+.Does(() => GitIgnoreAddCakeRule(args));
 
 Task("CreateProjects")
-.Does(() => {
-    var projectDir = args.SrcDir + Directory(projectName);
-
-    if(DirectoryExists(projectDir))
-        Information("projectDir already exists.");
-    else
-    {
-        CreateDirectory(projectDir);
-        Information("projectDir created.");
-
-        // dotnet new classlib
-        DotNetCoreTool(projectDir.Path.FullPath, "new", 
-            new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
-    }
-
-    var testProjectDir = args.TestDir + Directory(projectName+".Tests");
-
-    if(DirectoryExists(testProjectDir))
-        Information("testProjectDir already exists.");
-    else
-    {
-        CreateDirectory(testProjectDir);
-        Information("testProjectDir created.");
-
-        // dotnet new test project
-        DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
-            new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
-    }
-
-    if(!FileExists(solutionFile))
-    {
-        // dotnet new sln
-        StartProcess("dotnet", new ProcessSettings()
-            .UseWorkingDirectory(args.Root)
-            .WithArguments(arguments=>arguments.Append($"new sln --name {projectName}")));
-
-        // dotnet sln add
-        StartProcess("dotnet", new ProcessSettings()
-            .UseWorkingDirectory(args.Root)
-            .WithArguments(arguments=>arguments.Append($"sln add {projectDir}/{projectName}.csproj")));
-        
-        // dotnet sln add
-        StartProcess("dotnet", new ProcessSettings()
-            .UseWorkingDirectory(args.Root)
-            .WithArguments(arguments=>arguments.Append($"sln add {testProjectDir}/{projectName}.Tests.csproj")));
-    }
-    else
-    {
-        Information($"Solution file {solutionFile} already exists.");
-    }
-});
+.Does(() => CreateProjects(args));
 
 Task("SourceLink")
-.Does(() => {
-    Information("Adding SourceLink.");
-
-    string dirBuildPropsText = @"<Project>
-  <ItemGroup>
-    <PackageReference Include=""SourceLink.Create.CommandLine"" Version=""2.8.0"" PrivateAssets=""All"" /> 
-  </ItemGroup>
-  <PropertyGroup>
-    <DebugType>embedded</DebugType>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-</Project>";
-
-    System.IO.File.WriteAllText(args.SrcDir + File("Directory.Build.props"), dirBuildPropsText); 
-});
+.Does(() => AddBuildProps(args));
 
 Task("EditorConfig")
-.Does(() => {
-    Information("Adding EditorConfig.");
-    var file = args.ResourcesDir + File(".editorconfig");
-    CopyFileToDirectory(file, args.Root);
-});
+.Does(() => AddEditorConfig(args));
 
 Task("CreateCommonProjectFiles")
 .Does(() => CreateCommonProjectFiles(args));
@@ -247,7 +135,8 @@ Task("Test")
 Task("Init")
     .IsDependentOn("Info")
     .IsDependentOn("CreateProjectStructure")
-    .IsDependentOn("GitIgnore")
+    .IsDependentOn("CheckOrDownloadGitIgnore")
+    .IsDependentOn("GitIgnoreAddCakeRule")
     .IsDependentOn("CreateProjects")
     .IsDependentOn("EditorConfig")
     .IsDependentOn("SourceLink")
