@@ -7,8 +7,8 @@
 #load package.cake
 #load versioning.cake
 
-var rootDir         = Argument("rootDir", "./");
-var buildDir        = Argument<string>("buildDir", null);
+var rootDir         = Argument(args, "rootDir", "./");
+var buildDir        = Argument<string>(args, "buildDir", null);
 ScriptArgs args     = new ScriptArgs(Context, Directory(rootDir));
 
 var target                  = ArgumentOrEnvVar(args, "target", "Default");
@@ -28,7 +28,9 @@ var runtimeName             = ArgumentOrEnvVar(args, "runtimeName", "any", new [
 //////////////////////////////////////////////////////////////////////
 
 var version_props_file = args.Root + File("version.props");
-var solutionFile = args.Root + File($"{projectName}.sln");
+var solutionName = $"{projectName}.sln";
+args.Params["solutionName"] = solutionName;
+var solutionFile = args.Root + File(solutionName);
 
 args.BuildDir = args.BuildDir ?? args.Root + Directory("build") + Directory(configuration);
 var testResultsDir = buildDir + Directory("test-results");
@@ -48,6 +50,7 @@ var runtimeArg = runtimeName != "any" ? $" --runtime {runtimeName}" : "";
 var sourceLinkArgs =" /p:SourceLinkCreate=true";
 var noSourceLinkArgs =" /p:SourceLinkCreate=false";
 var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
+var tesResultsDirArgs = $" --results-directory {testResultsDir}";
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -147,8 +150,7 @@ Task("CreateProjects")
             new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
     }
 
-    var slnFile = args.Root + File($"{projectName}.sln");
-    if(!FileExists(slnFile))
+    if(!FileExists(solutionFile))
     {
         // dotnet new sln
         StartProcess("dotnet", new ProcessSettings()
@@ -167,7 +169,7 @@ Task("CreateProjects")
     }
     else
     {
-        Information($"Solution file {slnFile} already exists.");
+        Information($"Solution file {solutionFile} already exists.");
     }
 });
 
@@ -206,23 +208,37 @@ Task("Build")
         ArgumentCustomization =
           args => args
             .Append("/p:SourceLinkCreate=true")
+            .Append(nugetSourcesArg)
+            .Append(noSourceLinkArgs)
     };
-    var projects = GetFiles("./src/**/*.csproj");
+
+    var projectsMask = $"{args.SrcDir}/**/*.csproj";
+    var projects = GetFiles(projectsMask).ToList();
+    Information($"ProjectsMask: {projectsMask}, Found: {projects.Count} project(s).");
     foreach(var project in projects)
     {
+        Information($"Building project: {project}");
         DotNetCoreBuild(project.FullPath, settings);
     }
 });
 
 Task("Test")
 .Does(() => {
-    var test_projects = GetFiles("./test/**/*.csproj");
-    foreach(var test_project in test_projects)
+    var projectsMask = $"{args.TestDir}/**/*.csproj";
+    var test_projects = GetFiles(projectsMask).ToList();
+    Information($"TestProjectsMask: {projectsMask}, Found: {test_projects.Count} test project(s).");
+    for (int testProjNum = 0; testProjNum < test_projects.Count; testProjNum++)
     {
+        var test_project = test_projects[testProjNum];
+        var logFilePath = $"test-result-{testProjNum+1}.trx";
+        var loggerArgs = $" --logger trx;logfilename={logFilePath}";
         var testSettings = new DotNetCoreTestSettings()
         {
             Configuration = configuration,
-            NoBuild = true
+            //NoBuild = true,
+            ArgumentCustomization = args => args
+                .Append(tesResultsDirArgs)
+                .Append(loggerArgs)
         };
         DotNetCoreTest(test_project.FullPath, testSettings);
     }
@@ -239,6 +255,10 @@ Task("Init")
 ;
 
 Task("Default")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test");
+
+Task("Travis")
     .IsDependentOn("Build")
     .IsDependentOn("Test");
 
