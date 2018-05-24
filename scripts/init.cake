@@ -1,4 +1,3 @@
-
 #load common.cake
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md

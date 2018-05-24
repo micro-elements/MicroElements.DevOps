@@ -1,3 +1,5 @@
+#load common.cake
+
 public class DotNetUtils
 {
     public static void DotNetNugetPack(ICakeContext context, NuGetPackSettings settings)
@@ -81,4 +83,32 @@ public class DotNetUtils
 
         //context.DeleteFile(nugetCsprojFileName);
     }
+}
+
+public static void CopyPackagesToArtifacts(this ScriptArgs args)
+{
+    var context = args.Context;
+
+    var fileMask = $"{args.SrcDir}/**/*.nupkg";
+    var files = context.GetFiles(fileMask);
+    context.CopyFiles(files, args.ArtifactsDir);
+}
+
+public static void UploadPackages(this ScriptArgs args)
+{
+    var context = args.Context;
+
+    args.upload_nuget.ShouldHaveValue();
+    args.upload_nuget_api_key.ShouldHaveValue();
+
+    context.Information("UploadPackages started.");
+
+    var packageMask = $"{args.ArtifactsDir}/*.nupkg";
+    context.DotNetCoreNuGetPush(packageMask, new DotNetCoreNuGetPushSettings(){
+        WorkingDirectory = args.ArtifactsDir,
+        Source = args.upload_nuget,
+        ApiKey = args.upload_nuget_api_key,
+    });
+
+    context.Information("UploadPackages finished.");
 }

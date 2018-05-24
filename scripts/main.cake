@@ -110,6 +110,14 @@ Task("Test")
     }
 });
 
+Task("CopyPackagesToArtifacts")
+    .IsDependentOn("Build")
+    .Does(() => CopyPackagesToArtifacts(args));
+
+Task("UploadPackages")
+    .WithCriteria(versionInfo.IsRelease)
+    .Does(() => UploadPackages(args));
+
 Task("Init")
     .IsDependentOn("Info")
     .IsDependentOn("CreateProjectStructure")
@@ -123,10 +131,15 @@ Task("Init")
 
 Task("Default")
     .IsDependentOn("Build")
-    .IsDependentOn("Test");
+    .IsDependentOn("Test")
+    .IsDependentOn("CopyPackagesToArtifacts")
+    ;
 
 Task("Travis")
     .IsDependentOn("Build")
-    .IsDependentOn("Test");
+    .IsDependentOn("Test")
+    .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("UploadPackages")
+    ;
 
 RunTarget(args.Target);
