@@ -392,6 +392,15 @@ public class ScriptParamBuilder<T>
     } 
 }
 
+public static ScriptParam<T> ShouldHaveValue<T>(this ScriptParam<T> param)
+{
+    if(!param.HasValue)
+        throw new Exception($"Param {param.Name} should have value");
+    if(param.Source == ParamSource.NoValue)
+        throw new Exception($"Param {param.Name} should have value");
+    return param;
+}
+
 /// <summary>Returns command line argument or environment variable or default value.</summary>
 public static T ArgumentOrEnvVar<T>(ICakeContext context, string name, T defaultValue, T[] variants = null, bool secret = false)
 {
