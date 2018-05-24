@@ -12,7 +12,7 @@ var target = Argument("target", "Default");
 Task("Info")
 .Does(() => {
     Information("MicroElements DevOps scripts.");
-    ScriptArgs args = new ScriptArgs(Context, Directory("./"));
+    ScriptArgs args = new ScriptArgs(Context, "./");
     FillProjectAttributes(args);
 });
 
