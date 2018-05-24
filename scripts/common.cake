@@ -81,7 +81,7 @@ public class ScriptArgs
         SetParam("TemplatesDir", TemplatesDir);
     }
 
-    public static ScriptParamBuilder<T> Param<T>(string name)
+    public ScriptParamBuilder<T> Param<T>(string name)
     {
         bool accepted = typeof(T) == typeof(string) || typeof(T) == typeof(bool);
         if(!accepted)
@@ -268,8 +268,6 @@ public enum ParamSource
 
 public class ScriptParamBuilder<T>
 {
-    ScriptArgs _scriptArgs;
-
     string _name;
     string _description;
     GetValue<T> _getValue;
@@ -279,10 +277,9 @@ public class ScriptParamBuilder<T>
     bool _canBeNull = false;
     bool _isSecret = false;
 
-    public ScriptParamBuilder(string name, ScriptArgs scriptArgs = null)
+    public ScriptParamBuilder(string name)
     {
         _name = name;
-        _scriptArgs = scriptArgs;
     }
 
     public ScriptParamBuilder<T> WithValue(GetValue<T> getValue)
@@ -387,9 +384,9 @@ public class ScriptParamBuilder<T>
 
         context.Information($"PARAM: {param.Name}={param.Formated}; SOURCE: {varSource}");
 
-        if(_scriptArgs!=null)
+        if(args!=null)
         {
-            _scriptArgs.SetParam(param.Name, param.Value);
+            args.SetParam(param.Name, param.Value);
         }
         return param;
     } 
