@@ -20,8 +20,8 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.26.1"
-$DEVOPS_VERSION = "0.4.0"
+$CAKE_VERSION = "0.27.2"
+$DEVOPS_VERSION = "0.5.0"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
