@@ -14,14 +14,6 @@ var buildDir        = Argument<string>("buildDir", null);
 ScriptArgs args     = new ScriptArgs(Context, rootDir, buildDir);
 
 //////////////////////////////////////////////////////////////////////
-// CONVENTIONS
-//////////////////////////////////////////////////////////////////////
-
-var version_props_file = args.RootDir + File("version.props");
-var versionInfo = Versioning.ReadVersion(Context, version_props_file);
-Information($"VERSION:{versionInfo.VersionPrefix}");
-
-//////////////////////////////////////////////////////////////////////
 // TOOL ARGUMENTS 
 //////////////////////////////////////////////////////////////////////
 
@@ -115,8 +107,12 @@ Task("CopyPackagesToArtifacts")
     .Does(() => CopyPackagesToArtifacts(args));
 
 Task("UploadPackages")
-    .WithCriteria(versionInfo.IsRelease)
+    .WithCriteria(args.Version.IsRelease)
     .Does(() => UploadPackages(args));
+
+Task("DoVersioning")
+    .WithCriteria(args.Version.IsRelease)
+    .Does(() => DoVersioning(args));
 
 Task("Init")
     .IsDependentOn("Info")

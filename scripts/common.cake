@@ -1,3 +1,5 @@
+#load versioning.cake
+
 /// <summary>
 /// ScriptArgs provides parameters and conventions for interscript communication.
 /// </summary>
@@ -5,6 +7,9 @@ public class ScriptArgs
 {
     public ICakeContext Context {get;}
     public ConvertableDirectoryPath RootDir {get;}
+
+    public VersionInfo Version {get;}
+
     public ConvertableDirectoryPath BuildDir;
     public ConvertableDirectoryPath SrcDir;
     public ConvertableDirectoryPath TestDir;
@@ -62,10 +67,18 @@ public class ScriptArgs
         var solutionName = Param<string>("solutionName").WithValue(conventions.GetSolutionName).DefaultValue($"{ProjectName.Value}.sln").Build(this, conventions);
         var solutionFile = Param<string>("solutionFile").WithValue(conventions.GetSolutionFileName).Build(this, conventions);
 
-        // TODO: Runtime evaluation
+
         BuildDir = BuildDir ?? RootDir + context.Directory("build") + context.Directory(Configuration.Value);
         TestResultsDir = BuildDir + context.Directory("test-results");
         ArtifactsDir = BuildDir + context.Directory("artifacts");
+
+        var version_props_file = 
+            Param<FilePath>("version_props_file")
+            .WithValue((args)=>RootDir + context.File("version.props"))
+            .Build(this, conventions);
+
+        Version = Versioning.ReadVersion(Context, version_props_file);
+        context.Information($"VERSION: {Version.VersionPrefix}");
 
         SetParamsFromProperties();
     }
@@ -83,9 +96,9 @@ public class ScriptArgs
 
     public ScriptParamBuilder<T> Param<T>(string name)
     {
-        bool accepted = typeof(T) == typeof(string) || typeof(T) == typeof(bool);
-        if(!accepted)
-            throw new Exception($"Param {name} must be one of type: string, bool");
+        //bool accepted = typeof(T) == typeof(string) || typeof(T) == typeof(bool);
+        //if(!accepted)
+        //    throw new Exception($"Param {name} must be one of type: string, bool");
         return new ScriptParamBuilder<T>(name);
     }
 
@@ -102,13 +115,7 @@ public class ScriptArgs
         return ParamKeys.Contains(key);
     }
 
-    public IEnumerable<string> ParamKeys
-    {
-        get
-        {
-            return Params.Keys;
-        }
-    }
+    public IEnumerable<string> ParamKeys => Params.Keys;
 
     public void SetParam<T>(string name, T value)
     {
@@ -151,9 +158,14 @@ public class ScriptArgs
     }
 }
 
+/// <summary>
+/// ParamValue contains value and source of value.
+/// </summary>
+/// <typeparam name="T">Value type.</typeparam>
 public class ParamValue<T>
 {
     public T Value {get;}
+
     public ParamSource Source {get;}
 
     public ParamValue(T value, ParamSource source)
@@ -165,6 +177,7 @@ public class ParamValue<T>
 
 public delegate ParamValue<T> GetParam<T>(ICakeContext context, string name);
 public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
+public delegate T GetSimpleValue<T>(ScriptArgs args);
 
 
 public class ScriptConventions
@@ -176,7 +189,7 @@ public class ScriptConventions
     public GetValue<string> GetSolutionFileName;
 }
 
-public static ParamValue<string> ToParamValue(this string value) => new ParamValue<string>(value, ParamSource.Conventions);
+public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
 
 public class DefaultConventions : ScriptConventions
 {
@@ -285,6 +298,12 @@ public class ScriptParamBuilder<T>
     public ScriptParamBuilder<T> WithValue(GetValue<T> getValue)
     {
         _getValue = getValue;
+        return this;
+    }
+
+    public ScriptParamBuilder<T> WithValue(GetSimpleValue<T> getValue)
+    {
+        _getValue = (args) => getValue(args).ToParamValue();
         return this;
     }
 
