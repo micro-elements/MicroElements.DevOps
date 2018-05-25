@@ -265,3 +265,19 @@ public static void CreateProjects(this ScriptArgs args)
         context.Information($"Solution file {solutionFile} already exists.");
     }
 }
+
+public static void AddTravisFile(this ScriptArgs args)
+{
+    var context = args.Context;
+    string name = ".travis.yml";
+
+    var file_name = args.RootDir + context.File(name);
+    if(context.FileExists(file_name))
+        context.Information($"{name} file already exists.");
+    else
+    {
+        var content = ReadTemplate(args, $"{name}");
+        System.IO.File.WriteAllText(file_name, content);
+        context.Information($"{name} created.");
+    }
+}

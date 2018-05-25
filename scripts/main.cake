@@ -58,6 +58,9 @@ Task("EditorConfig")
 Task("CreateCommonProjectFiles")
 .Does(() => CreateCommonProjectFiles(args));
 
+Task("AddTravisFile")
+.Does(() => AddTravisFile(args));
+
 Task("Build")
 .Does(() => {
     var settings = new DotNetCoreBuildSettings 
@@ -123,6 +126,7 @@ Task("Init")
     .IsDependentOn("EditorConfig")
     .IsDependentOn("SourceLink")
     .IsDependentOn("CreateCommonProjectFiles")
+    .IsDependentOn("AddTravisFile")
 ;
 
 Task("Default")
