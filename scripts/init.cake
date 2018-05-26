@@ -1,8 +1,10 @@
 #load common.cake
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
-public static void CreateProjectStructure(this ICakeContext context, ScriptArgs args)
+public static void CreateProjectStructure(this ScriptArgs args)
 {
+    var context = args.Context;
+
     if(context.DirectoryExists(args.SrcDir))
         context.Information("src already exists.");
     else
@@ -21,34 +23,12 @@ public static void CreateProjectStructure(this ICakeContext context, ScriptArgs 
 
 public static void AddBuildProps(this ScriptArgs args)
 {
-    var context = args.Context;
-    string name = "Directory.Build.props";
-
-    var file_name = args.SrcDir + context.File(name);
-    if(context.FileExists(file_name))
-        context.Information($"{name} file already exists.");
-    else
-    {
-        var content = ReadTemplate(args, $"{name}.xml");
-        System.IO.File.WriteAllText(file_name, content);
-        context.Information($"{name} created.");
-    }
+    args.AddFileFromTemplate("Directory.Build.props.xml", args.SrcDir, "Directory.Build.props");
 }
 
 public static void AddEditorConfig(this ScriptArgs args)
 {
-    var context = args.Context;
-    string name = ".editorconfig";
-    var file_name = args.RootDir + context.File(name);
-
-    if(context.FileExists(file_name))
-        context.Information($"{name} file already exists.");
-    else
-    {
-        context.Information("Adding EditorConfig.");
-        var fileOrigin = args.ResourcesDir + context.File(".editorconfig");
-        context.CopyFileToDirectory(fileOrigin, args.RootDir);
-    }
+    args.AddFileFromResource(".editorconfig", args.RootDir);
 }
 
 public static void CreateCommonProjectFiles(this ScriptArgs args)
@@ -60,7 +40,7 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
         context.Information("version.props file already exists.");
     else
     {
-        var version_props_content = ReadTemplate(args, "version.props.xml");
+        var version_props_content = GetTemplate(args, "version.props.xml");
         System.IO.File.WriteAllText(version_props_file_name, version_props_content);
         context.Information("version.props created.");
     }
@@ -70,7 +50,7 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
         context.Information("common.props file already exists.");
     else
     {
-        var common_props_content = ReadTemplate(args, "common.props.xml");
+        var common_props_content = GetTemplate(args, "common.props.xml");
         // common props filling
         FillProjectAttributes(args);
         common_props_content = FillTags(common_props_content, args);
@@ -268,16 +248,11 @@ public static void CreateProjects(this ScriptArgs args)
 
 public static void AddTravisFile(this ScriptArgs args)
 {
-    var context = args.Context;
-    string name = ".travis.yml";
+    args.AddFileFromTemplate(".travis.yml", args.RootDir);
+}
 
-    var file_name = args.RootDir + context.File(name);
-    if(context.FileExists(file_name))
-        context.Information($"{name} file already exists.");
-    else
-    {
-        var content = ReadTemplate(args, $"{name}");
-        System.IO.File.WriteAllText(file_name, content);
-        context.Information($"{name} created.");
-    }
+public static void AddCakeBootstrapFiles(this ScriptArgs args)
+{
+    args.AddFileFromResource("build.sh", args.RootDir);
+    args.AddFileFromResource("build.ps1", args.RootDir);
 }

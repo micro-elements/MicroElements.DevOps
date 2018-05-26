@@ -30,7 +30,7 @@ Task("Info")
 
 // see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 Task("CreateProjectStructure")
-    .Does(() => CreateProjectStructure(Context, args));
+    .Does(() => CreateProjectStructure(args));
 
 Task("CheckOrDownloadGitIgnore")
     .Description("Checks that gitignore exists. If not exists downloads from github")
@@ -54,6 +54,9 @@ Task("CreateCommonProjectFiles")
 
 Task("AddTravisFile")
     .Does(() => AddTravisFile(args));
+
+Task("AddCakeBootstrapFiles")
+    .Does(() => AddCakeBootstrapFiles(args));
 
 Task("Build")
     .Does(() => Build(args));
@@ -83,6 +86,7 @@ Task("Init")
     .IsDependentOn("SourceLink")
     .IsDependentOn("CreateCommonProjectFiles")
     .IsDependentOn("AddTravisFile")
+    .IsDependentOn("AddCakeBootstrapFiles")
 ;
 
 Task("Default")

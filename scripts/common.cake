@@ -460,12 +460,50 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
     return devops_version;
 }
 
-public static string ReadTemplate(ScriptArgs args, string fileName)
+public static string GetTemplate(this ScriptArgs args, string fileName)
 {
     var templateFileName = args.Context.File(fileName);
     templateFileName = templateFileName.Path.IsRelative? args.TemplatesDir + templateFileName : templateFileName;
     string templateText = System.IO.File.ReadAllText(templateFileName.Path.FullPath);
     return templateText;
+}
+
+public static string GetResource(this ScriptArgs args, string fileName)
+{
+    var resourceFileName = args.Context.File(fileName);
+    resourceFileName = resourceFileName.Path.IsRelative? args.ResourcesDir + resourceFileName : resourceFileName;
+    string resourceText = System.IO.File.ReadAllText(resourceFileName.Path.FullPath);
+    return resourceText;
+}
+
+public static void AddFileFromResource(this ScriptArgs args, string name, ConvertableDirectoryPath destinationDir, string destinationName = null)
+{
+    var context = args.Context;
+    var destinationFile = destinationDir + context.File(destinationName??name);
+
+    if(context.FileExists(destinationFile))
+        context.Information($"{destinationFile} file already exists.");
+    else
+    {
+        var content = args.GetResource($"{name}");
+        System.IO.File.WriteAllText(destinationFile, content);
+        context.Information($"{destinationFile} created.");
+    }
+}
+
+public static void AddFileFromTemplate(this ScriptArgs args, string name, ConvertableDirectoryPath destinationDir, string destinationName = null)
+{
+    var context = args.Context;
+    var destinationFile = destinationDir + context.File(destinationName??name);
+
+    if(context.FileExists(destinationFile))
+        context.Information($"{destinationFile} file already exists.");
+    else
+    {
+        var content = args.GetTemplate($"{name}");
+        System.IO.File.WriteAllText(destinationFile, content);
+        context.Information($"{destinationFile} created.");
+    }
 }
 
 public static string FillTags(string inputXml, ScriptArgs args)
