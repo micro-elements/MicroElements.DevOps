@@ -1,1 +1,0 @@
-& powershell.exe .\build.ps1 -Target "Init"

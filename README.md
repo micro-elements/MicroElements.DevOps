@@ -5,7 +5,7 @@ DevOps scripts for CI and CD
 ### Download bootstrap script
 Open a new PowerShell window and run the following command.
 ```
-Invoke-WebRequest https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/downloads/build.ps1 -OutFile build.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/resources/build.ps1 -OutFile build.ps1
 ```
 
 ### Initialize component
