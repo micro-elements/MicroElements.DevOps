@@ -4,10 +4,12 @@
 # This is the modified Cake bootstrapper script for Linux and OS X.
 ##########################################################################
 
+CAKE_VERSION=0.27.2
+DEVOPS_VERSION=0.5.0-beta.2
+
 # Define directories.
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/tools
-CAKE_VERSION=0.27.2
 CAKE_DLL=$TOOLS_DIR/Cake.CoreCLR.$CAKE_VERSION/Cake.dll
 NUGET_URL="https://www.nuget.org/api/v2/package"
 
