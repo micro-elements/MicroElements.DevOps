@@ -8,7 +8,9 @@ public class ScriptArgs
     public ICakeContext Context {get;}
     public ConvertableDirectoryPath RootDir {get;}
 
-    public VersionInfo Version {get;}
+    public ScriptConventions Conventions {get; set;} = new DefaultConventions();
+
+    public VersionInfo Version {get; set;}
 
     public ConvertableDirectoryPath BuildDir;
     public ConvertableDirectoryPath SrcDir;
@@ -34,56 +36,14 @@ public class ScriptArgs
     /// </summary>
     private Dictionary<string,object> Params = new Dictionary<string,object>(StringComparer.InvariantCultureIgnoreCase);
 
-    public ScriptArgs(ICakeContext context, string rootDir = "./", string buildDir = null)
+    public ScriptArgs(ICakeContext context, string rootDir = "./")
     {
         Context = context;
+        Conventions = Conventions ?? new DefaultConventions();
         RootDir = context.Directory(rootDir);
-        BuildDir = buildDir != null ? context.Directory(buildDir) : null;
-        ScriptConventions conventions = new DefaultConventions();
-
-        Target                  = Param<string>("target").DefaultValue("Default").Build(this, conventions);
-        Configuration           = Param<string>("Configuration").DefaultValue("Release").ValidValues("Release", "Debug").Build(this, conventions);
-        ProjectName             = Param<string>("ProjectName").WithValue(conventions.GetProjectName).Build(this, conventions);
-
-        upload_nuget            = Param<string>("upload_nuget").DefaultValue("https://api.nuget.org/v3/index.json").Build(this, conventions);
-        upload_nuget_api_key    = Param<string>("upload_nuget_api_key").DefaultValue("00000000-0000-0000-0000-000000000000").IsSecret().Build(this, conventions);
-        nuget_source1           = Param<string>("nuget_source1").DefaultValue("https://api.nuget.org/v3/index.json").Build(this, conventions);
-        nuget_source2           = Param<string>("nuget_source1").Build(this, conventions);
-        nuget_source3           = Param<string>("nuget_source1").Build(this, conventions);
-
-        // any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
-        RuntimeName = Param<string>("runtimeName").DefaultValue("any")
-                        .ValidValues("any", "linux-x64", "win-x64")
-                        .Build(this, conventions);
-
-        SrcDir              = RootDir + context.Directory("src");
-        TestDir             = RootDir + context.Directory("test");
-        ToolsDir            = RootDir + context.Directory("tools");
-        var devops_version  = GetVersionFromCommandLineArgs(context);
-        var devops_tool_dir = ToolsDir + context.Directory("microelements.devops") + context.Directory(devops_version);
-        ResourcesDir        = devops_tool_dir + context.Directory("resources");
-        TemplatesDir        = devops_tool_dir + context.Directory("templates");
-
-        var solutionName = Param<string>("solutionName").WithValue(conventions.GetSolutionName).DefaultValue($"{ProjectName.Value}.sln").Build(this, conventions);
-        var solutionFile = Param<string>("solutionFile").WithValue(conventions.GetSolutionFileName).Build(this, conventions);
-
-
-        BuildDir = BuildDir ?? RootDir + context.Directory("build") + context.Directory(Configuration.Value);
-        TestResultsDir = BuildDir + context.Directory("test-results");
-        ArtifactsDir = BuildDir + context.Directory("artifacts");
-
-        var version_props_file = 
-            Param<FilePath>("version_props_file")
-            .WithValue((args)=>RootDir + context.File("version.props"))
-            .Build(this, conventions);
-
-        Version = Versioning.ReadVersion(Context, version_props_file);
-        context.Information($"VERSION: {Version.VersionPrefix}");
-
-        SetParamsFromProperties();
     }
 
-    private void SetParamsFromProperties()
+    public void Build()
     {
         SetParam("RootDir", RootDir);
         SetParam("BuildDir", BuildDir);
@@ -92,14 +52,14 @@ public class ScriptArgs
         SetParam("ToolsDir", ToolsDir);
         SetParam("ResourcesDir", ResourcesDir);
         SetParam("TemplatesDir", TemplatesDir);
+
+        PrintParams();
+        Context.Information($"VERSION: {Version.VersionPrefix}");
     }
 
     public ScriptParamBuilder<T> Param<T>(string name)
     {
-        //bool accepted = typeof(T) == typeof(string) || typeof(T) == typeof(bool);
-        //if(!accepted)
-        //    throw new Exception($"Param {name} must be one of type: string, bool");
-        return new ScriptParamBuilder<T>(name);
+        return new ScriptParamBuilder<T>(this, name);
     }
 
     public void PrintParams()
@@ -281,6 +241,7 @@ public enum ParamSource
 
 public class ScriptParamBuilder<T>
 {
+    ScriptArgs _args;
     string _name;
     string _description;
     GetValue<T> _getValue;
@@ -290,9 +251,10 @@ public class ScriptParamBuilder<T>
     bool _canBeNull = false;
     bool _isSecret = false;
 
-    public ScriptParamBuilder(string name)
+    public ScriptParamBuilder(ScriptArgs args, string name)
     {
-        _name = name;
+        _args = args.CheckNotNull("args");
+        _name = name.CheckNotNull("name");
     }
 
     public ScriptParamBuilder<T> WithValue(GetValue<T> getValue)
@@ -343,9 +305,11 @@ public class ScriptParamBuilder<T>
         return this;
     }
 
-    public ScriptParam<T> Build(ScriptArgs args, ScriptConventions conventions)
+    public ScriptParam<T> Build()
     {
-        var context = args.Context;
+        var context = _args.Context;
+        var conventions = _args.Conventions;
+
         var param = new ScriptParam<T>(_name);
         param.Description = _description;
         param.CanBeNull = _canBeNull;
@@ -362,7 +326,7 @@ public class ScriptParamBuilder<T>
         ParamSource varSource = ParamSource.NoValue;
         if(_getValue!= null)
         {
-            var paramValue = _getValue(args);
+            var paramValue = _getValue(_args);
             value = paramValue.Value;
             varSource = paramValue.Source;
         }
@@ -403,10 +367,8 @@ public class ScriptParamBuilder<T>
 
         context.Information($"PARAM: {param.Name}={param.Formated}; SOURCE: {varSource}");
 
-        if(args!=null)
-        {
-            args.SetParam(param.Name, param.Value);
-        }
+        _args.SetParam(param.Name, param.Value);
+        
         return param;
     } 
 }
@@ -514,6 +476,13 @@ public static string FillTags(string inputXml, ScriptArgs args)
         inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.GetStringParam(key)}</{key}>");
     }
     return inputXml;
+}
+
+public static T CheckNotNull<T>(this T value, string paramName)
+{
+    if(value == null)
+        throw new ArgumentNullException(paramName??"value");
+    return value;
 }
 
 public class ProcessUtils

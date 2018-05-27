@@ -16,7 +16,7 @@ public static void ToolArguments(ScriptArgs args)
 
     args.Param<string>("nugetSourcesArg")
         .WithValue(a=>new string[]{a.nuget_source1, a.nuget_source2, a.nuget_source3, a.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Aggregate("", (s, s1) => $@"{s} --source ""{s1}"""))
-        .Build(args, null);
+        .Build();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

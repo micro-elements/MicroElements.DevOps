@@ -7,6 +7,7 @@
 #load build.cake
 #load package.cake
 #load versioning.cake
+#load scenarios.cake
 
 Information("MicroElements DevOps scripts.");
 
@@ -14,9 +15,11 @@ Information("MicroElements DevOps scripts.");
 // ARGS
 ///////////////////////////////////////////////////////////////////////////////
 
-var rootDir     = Argument("rootDir", "./");
-var buildDir    = Argument<string>("buildDir", null);
-ScriptArgs args = new ScriptArgs(Context, rootDir, buildDir);
+var rootDir = Argument("rootDir", "./");
+ScriptArgs args = new ScriptArgs(Context, rootDir);
+args.Conventions = new DefaultConventions();
+args.DefaultScenario();
+args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
