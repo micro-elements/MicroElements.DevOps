@@ -70,18 +70,21 @@ public class DotNetUtils
         context.CreateDirectory(settings.OutputDirectory);
 
         System.IO.File.WriteAllText(nugetCsprojFileName.FullPath, nugetCsproj);
+        
         var nuspecOutputPath = settings.OutputDirectory.CombineWithFilePath(System.IO.Path.GetFileName(nugetNuspecFileName));
-        context.CopyFile(nugetNuspecFileName, nuspecOutputPath);
+        var nuspecContent = System.IO.File.ReadAllText(nugetNuspecFileName);
+        var releaseNotes = settings.ReleaseNotes.NotNull().FirstOrDefault() ?? "";
+        nuspecContent = nuspecContent
+            .Replace("$releaseNotes$", releaseNotes);
+        System.IO.File.WriteAllText(nuspecOutputPath.FullPath, nuspecContent);
 
         var packSettings = new DotNetCorePackSettings()
         {
             OutputDirectory = settings.OutputDirectory,
-            WorkingDirectory = "./",
+            WorkingDirectory = "./"
         };
-        //todo: settings.ReleaseNotes
-        context.DotNetCorePack(nugetCsprojFileName.FullPath, packSettings);
 
-        //context.DeleteFile(nugetCsprojFileName);
+        context.DotNetCorePack(nugetCsprojFileName.FullPath, packSettings);
     }
 }
 

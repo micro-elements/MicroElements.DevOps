@@ -16,15 +16,16 @@ Task("Info")
     FillProjectAttributes(args);
 });
 
-//see: https://github.com/cake-build/cake/issues/1527
 #load ./scripts/package.cake
 Task("Package")
 .Does(() => {
+    var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
         OutputDirectory = "./artifacts",
-        BasePath = Directory("./")
+        BasePath = Directory("./"),
+        ReleaseNotes = new string[] {releaseNotes}
     };
     CleanDirectory("./artifacts");
     

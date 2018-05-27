@@ -1,5 +1,13 @@
 # 0.5.0
-- todo
+- Redesigned ScriptParam and ScriptArgs
+- New Targets: AddTravisFile, CopyPackagesToArtifacts, UploadPackages
+- Added versioning
+- Added generate package on build
+- Added build.sh to resources and AddCakeBootstrapFiles target
+- Build and Test moved to build.cake
+- Added many common util methods
+- Scenarios moved from common
+- DotNetPack with releaseNotes
 
 # 0.4.0
 - Common props created

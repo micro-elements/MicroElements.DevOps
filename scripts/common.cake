@@ -485,6 +485,12 @@ public static T CheckNotNull<T>(this T value, string paramName)
     return value;
 }
 
+public static IEnumerable<T> NotNull<T>(this IEnumerable<T> collection) => collection ?? Array.Empty<T>();
+
+public static ICollection<T> NotNull<T>(this ICollection<T> collection) => collection ?? Array.Empty<T>();
+
+public static T[] NotNull<T>(this T[] collection) => collection ?? Array.Empty<T>();
+
 public class ProcessUtils
 {
     public static (int ExitCode, string Output) StartProcessAndReturnOutput(ICakeContext context, FilePath fileName, ProcessArgumentBuilder args, bool printOutput = false)
