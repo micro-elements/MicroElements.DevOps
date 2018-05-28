@@ -16,7 +16,7 @@ Task("Info")
     FillProjectAttributes(args);
 });
 
-#load ./scripts/package.cake
+#load ./scripts/packaging.cake
 Task("Package")
 .Does(() => {
     var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");

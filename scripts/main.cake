@@ -4,8 +4,9 @@
 
 #load common.cake
 #load init.cake
-#load build.cake
-#load package.cake
+#load building.cake
+#load testing.cake
+#load packaging.cake
 #load versioning.cake
 #load scenarios.cake
 
@@ -25,13 +26,6 @@ args.Build();
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
 
-Task("Info")
-.Does(() => {
-    Information("MicroElements DevOps scripts.");
-    args.PrintParams();
-});
-
-// see: https://github.com/micro-elements/MicroElements.DevOps.Tutorial/blob/master/docs/01_project_structure.md
 Task("CreateProjectStructure")
     .Does(() => CreateProjectStructure(args));
 
@@ -80,7 +74,6 @@ Task("DoVersioning")
     .Does(() => DoVersioning(args));
 
 Task("Init")
-    .IsDependentOn("Info")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("CheckOrDownloadGitIgnore")
     .IsDependentOn("GitIgnoreAddCakeRule")
