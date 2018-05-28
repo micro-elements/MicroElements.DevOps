@@ -35,14 +35,14 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
 {
     var context = args.Context;
 
-    var version_props_file_name = args.RootDir + context.File("version.props");
+    var version_props_file_name = args.KnownFiles.VersionProps.Value.FullPath;
     if(context.FileExists(version_props_file_name))
-        context.Information("version.props file already exists.");
+        context.Information($"{version_props_file_name} file already exists.");
     else
     {
         var version_props_content = GetTemplate(args, "version.props.xml");
         System.IO.File.WriteAllText(version_props_file_name, version_props_content);
-        context.Information("version.props created.");
+        context.Information($"{version_props_file_name} created.");
     }
 
     var common_props_file_name = args.RootDir + context.File("common.props");

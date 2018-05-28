@@ -159,13 +159,18 @@ public static void DoVersioning(this ScriptArgs args)
         }
     }
     
+    // todo: prereleaseTag to conventions
     var prereleaseTag = "";
     if(!version.IsRelease)
         prereleaseTag = $"unstable.{version.BuildNumber}";
     version.VersionSuffix = prereleaseTag;
   
-    var version_props_file = args.GetStringParam("version_props_file");
+    var version_props_file = args.KnownFiles.VersionProps.Value.FullPath;
     var version_props_file_content = Versioning.FormatVersionProps(version);
+
+    var releaseNotes = System.IO.File.ReadAllText(args.KnownFiles.ChangeLog.Value.FullPath);
+
+    // todo: release notes!!!
     System.IO.File.WriteAllText(version_props_file, version_props_file_content);
 
     context.Information("VERSION_PROPS:");

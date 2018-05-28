@@ -12,8 +12,8 @@ public static ScriptArgs DefaultScenario(this ScriptArgs args)
     args.upload_nuget            = args.Param<string>("upload_nuget").DefaultValue("https://api.nuget.org/v3/index.json").Build();
     args.upload_nuget_api_key    = args.Param<string>("upload_nuget_api_key").DefaultValue("00000000-0000-0000-0000-000000000000").IsSecret().Build();
     args.nuget_source1           = args.Param<string>("nuget_source1").DefaultValue("https://api.nuget.org/v3/index.json").Build();
-    args.nuget_source2           = args.Param<string>("nuget_source1").Build();
-    args.nuget_source3           = args.Param<string>("nuget_source1").Build();
+    args.nuget_source2           = args.Param<string>("nuget_source2").Build();
+    args.nuget_source3           = args.Param<string>("nuget_source3").Build();
 
     // any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
     args.RuntimeName = args.Param<string>("runtimeName").DefaultValue("any")
@@ -35,11 +35,17 @@ public static ScriptArgs DefaultScenario(this ScriptArgs args)
     args.TestResultsDir = args.BuildDir + context.Directory("test-results");
     args.ArtifactsDir = args.BuildDir + context.Directory("artifacts");
 
-    var version_props_file = 
-        args.Param<FilePath>("version_props_file")
-        .WithValue((a)=>a.RootDir + context.File("version.props"))
-        .Build();
+    // KnownFiles
+    args.KnownFiles.VersionProps = args.Param<FilePath>("KnownFiles.VersionProps")
+        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("version.props")).Build();
 
-    args.Version = Versioning.ReadVersion(context, version_props_file);
+    args.KnownFiles.ChangeLog = args.Param<FilePath>("KnownFiles.ChangeLog")
+        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("CHANGELOG.md")).Build();
+
+    args.KnownFiles.Readme = args.Param<FilePath>("KnownFiles.Readme")
+        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("README.md")).Build();
+
+    args.Version = Versioning.ReadVersion(context, args.KnownFiles.VersionProps);
+
     return args;
 }

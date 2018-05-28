@@ -21,6 +21,15 @@ public class ScriptArgs
     public ConvertableDirectoryPath ResourcesDir;
     public ConvertableDirectoryPath TemplatesDir;
 
+    public class KnownFilesList
+    {
+        public ScriptParam<FilePath> ChangeLog;
+        public ScriptParam<FilePath> Readme;
+        public ScriptParam<FilePath> VersionProps;
+    }
+
+    public KnownFilesList KnownFiles = new KnownFilesList();
+
     public ScriptParam<string> Target {get;set;}
     public ScriptParam<string> Configuration {get;set;}
     public ScriptParam<string> ProjectName {get;set;}
