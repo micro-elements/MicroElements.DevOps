@@ -6,20 +6,20 @@
 public class ScriptArgs
 {
     public ICakeContext Context {get;}
-    public ConvertableDirectoryPath RootDir {get;}
+    public ScriptParam<DirectoryPath> RootDir {get;}
 
     public ScriptConventions Conventions {get; set;} = new DefaultConventions();
 
     public VersionInfo Version {get; set;}
 
-    public ConvertableDirectoryPath BuildDir;
-    public ConvertableDirectoryPath SrcDir;
-    public ConvertableDirectoryPath TestDir;
-    public ConvertableDirectoryPath TestResultsDir;
-    public ConvertableDirectoryPath ArtifactsDir;
-    public ConvertableDirectoryPath ToolsDir;
-    public ConvertableDirectoryPath ResourcesDir;
-    public ConvertableDirectoryPath TemplatesDir;
+    public ScriptParam<DirectoryPath> BuildDir;
+    public ScriptParam<DirectoryPath> SrcDir;
+    public ScriptParam<DirectoryPath> TestDir;
+    public ScriptParam<DirectoryPath> TestResultsDir;
+    public ScriptParam<DirectoryPath> ArtifactsDir;
+    public ScriptParam<DirectoryPath> ToolsDir;
+    public ScriptParam<DirectoryPath> ResourcesDir;
+    public ScriptParam<DirectoryPath> TemplatesDir;
 
     public class KnownFilesList
     {
@@ -49,7 +49,7 @@ public class ScriptArgs
     {
         Context = context;
         Conventions = Conventions ?? new DefaultConventions();
-        RootDir = context.Directory(rootDir);
+        RootDir = Param<DirectoryPath>("RootDir").WithValue(context.Directory(rootDir).Path).Build();
     }
 
     public void Build()
@@ -68,7 +68,10 @@ public class ScriptArgs
 
     public ScriptParamBuilder<T> Param<T>(string name)
     {
-        return new ScriptParamBuilder<T>(this, name);
+        var builder = new ScriptParamBuilder<T>(name);
+        if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
+            builder.WithValue(args=>DefaultConventions.ArgumentOrEnvVar<T>(args.Context, name));
+        return builder;
     }
 
     public void PrintParams()
@@ -131,23 +134,49 @@ public class ScriptArgs
 /// ParamValue contains value and source of value.
 /// </summary>
 /// <typeparam name="T">Value type.</typeparam>
-public class ParamValue<T>
+public class ParamValue<T> : IEquatable<ParamValue<T>>
 {
-    public T Value {get;}
+    public static ParamValue<T> NoValue = new ParamValue<T>(default(T), ParamSource.NoValue);
 
-    public ParamSource Source {get;}
+    public T Value { get; }
+
+    public ParamSource Source { get; }
 
     public ParamValue(T value, ParamSource source)
     {
         Value = value;
         Source = source;
     }
+
+    public bool Equals(ParamValue<T> other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return EqualityComparer<T>.Default.Equals(Value, other.Value) && Source == other.Source;
+    }
+}
+
+public static bool HasValue<T>(this ParamValue<T> paramValue)
+{
+    return paramValue.Source==ParamSource.NoValue || EqualityComparer<T>.Default.Equals(paramValue.Value, default(T));
 }
 
 public delegate ParamValue<T> GetParam<T>(ICakeContext context, string name);
+
+/// <summary>
+/// GetValue delegate. Returns ParamValue.
+/// </summary>
 public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
+
+/// <summary>
+/// Simplified GetValue. Translates to ParamValue with ParamSource.Conventions
+/// </summary>
 public delegate T GetSimpleValue<T>(ScriptArgs args);
 
+/// <summary>
+/// Converts value to ParamValue.
+/// </summary>
+public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
 
 public class ScriptConventions
 {
@@ -158,17 +187,15 @@ public class ScriptConventions
     public GetValue<string> GetSolutionFileName;
 }
 
-public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
-
 public class DefaultConventions : ScriptConventions
 {
     public DefaultConventions()
     {
         GetStringParam = ArgumentOrEnvVar<string>;
         GetBoolParam = ArgumentOrEnvVar<bool>;
-        GetProjectName = (args) => args.RootDir.Path.GetDirectoryName().ToParamValue();
+        GetProjectName = (args) => args.RootDir.Value.GetDirectoryName().ToParamValue();
         GetSolutionName = (args) => $"{args.ProjectName.Value}.sln".ToParamValue();
-        GetSolutionFileName = (args) => args.RootDir.Path.CombineWithFilePath(args.Context.File(args.GetStringParam("solutionName"))).FullPath.ToParamValue();
+        GetSolutionFileName = (args) => args.RootDir.Value.CombineWithFilePath(args.Context.File(args.GetStringParam("solutionName"))).FullPath.ToParamValue();
     }
 
     public static ParamValue<T> ArgumentOrEnvVar<T>(ICakeContext context, string name)
@@ -179,57 +206,106 @@ public class DefaultConventions : ScriptConventions
             return new ParamValue<T>((T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
         return new ParamValue<T>(default(T), ParamSource.NoValue);
     }
+
+    public ScriptParamBuilder<T> Param<T>(string name)
+    {
+        var builder = new ScriptParamBuilder<T>(name);
+        if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
+            builder.WithValue(args=>DefaultConventions.ArgumentOrEnvVar<T>(args.Context, name));
+        return builder;
+    }
 }
 
 public class ScriptParam<T> 
 {
-    public ScriptParam(string name)
+    private List<GetValue<T>> _getValueChain = new List<GetValue<T>>();
+
+    public ScriptParam(string name, IEnumerable<GetValue<T>> getValueChain  = null)
     {
         Name = name;
+        _getValueChain.AddRange(getValueChain.NotNull());
     }
+
     public string Name {get;}
     public string Description {get; set;}
-    public bool HasValue {get; private set;}
-    private T _value;
-    public T Value { get { return GetValue(); } }
+    public bool IsSecret {get; set;} = false;
+
+    public ParamValue<T> BuildedValue {get;private set;}
+    public T Value { get { return GetBuildedValue(); } }
     public T DefaultValue {get; set;}
-    public T[] ValidValues {get; set;}
 
     public bool Required = true;
+    public T[] ValidValues {get; set;}
     public bool CanBeNull = true;
-    public bool IsSecret = false;
-    public ParamSource Source;
 
-    public T GetValue()
+    /// <summary>
+    /// Builds Param. Evaluates value, checks rules.
+    /// </summary>
+    public ScriptParam<T> Build(ScriptArgs args)
     {
-        if(HasValue)
-            return _value;
-        if(Required)
-            throw new Exception($"Parameter {Name} is required but value is not provided.");
-        return DefaultValue;
+        var paramValue = EvaluateValue(args);
+        paramValue = CheckRules(paramValue);
+        BuildedValue = paramValue;
+
+        args.Context.Information($"PARAM: {Name}={Formated}; SOURCE: {BuildedValue.Source}");
+        return this;
     }
 
-    public void SetValue(T value)
+    public ParamValue<T> CheckRules(ParamValue<T> paramValue)
     {
+        if(paramValue==default(ParamValue<T>))
+            throw new Exception($"Parameter {Name} is null.");
+
+        if(Required && !paramValue.HasValue())
+            throw new Exception($"Parameter {Name} is required but value is not provided.");
+
         var comparer = EqualityComparer<T>.Default;
-        var nullValue = default(T);
-        if(!comparer.Equals(value, nullValue))
+        if(ValidValues!=null && !ValidValues.Contains(paramValue.Value, comparer) && !comparer.Equals(paramValue.Value, default(T)))
         {
-            _value = value; 
-            HasValue = true;
+            var errorMessage = $"Value '{paramValue.Value}' is not allowed. Use one of: {string.Join(",", ValidValues)}";
+            throw new Exception(errorMessage);
         }
-        else
+
+        return paramValue;
+    }
+
+    /// <summary>
+    /// Gets value that already builded.
+    /// </summary>
+    public T GetBuildedValue()
+    {
+        if(BuildedValue==default(ParamValue<T>))
+            throw new Exception($"Parameter {Name} was not builded but value was requested.");
+
+        if(BuildedValue.HasValue())
+            return BuildedValue.Value;
+
+        if(Required)
+            throw new Exception($"Parameter {Name} is required but value is not provided.");
+
+        return default(T); 
+    }
+
+    /// <summary>
+    /// Evaluates value.
+    /// </summary>
+    public ParamValue<T> EvaluateValue(ScriptArgs args)
+    {
+        ParamValue<T> paramValue = ParamValue<T>.NoValue;
+        foreach (var getValue in _getValueChain)
         {
-            if(CanBeNull)
-            {
-                _value = nullValue;
-                HasValue = true;
-            }
-            else
-            {
-                HasValue = false;
-            }
+            paramValue = getValue(args) ?? ParamValue<T>.NoValue;
+            if(!HasValue(paramValue))
+                continue;
         }
+
+        if(HasValue(paramValue))
+            return paramValue;
+
+        if(Required)
+            throw new Exception($"Parameter {Name} is required but value is not provided.");
+
+        return paramValue;
     }
 
     public string Formated => IsSecret? "***" : $"{Value}";
@@ -250,37 +326,47 @@ public enum ParamSource
 
 public class ScriptParamBuilder<T>
 {
-    ScriptArgs _args;
     string _name;
     string _description;
-    GetValue<T> _getValue;
+
+    List<GetValue<T>> _getValueChain = new List<GetValue<T>>();
+
     T _defaultValue;
     T[] _validValues;
     bool _required = false;
     bool _canBeNull = false;
     bool _isSecret = false;
 
-    public ScriptParamBuilder(ScriptArgs args, string name)
+    public ScriptParamBuilder(string name)
     {
-        _args = args.CheckNotNull("args");
         _name = name.CheckNotNull("name");
     }
 
     public ScriptParamBuilder<T> WithValue(GetValue<T> getValue)
     {
-        _getValue = getValue;
+        getValue.CheckNotNull("getValue");
+        _getValueChain.Add(getValue);
         return this;
     }
 
-    public ScriptParamBuilder<T> WithValue(GetSimpleValue<T> getValue)
+    public ScriptParamBuilder<T> WithValue(GetSimpleValue<T> getSimpleValue)
     {
-        _getValue = (args) => getValue(args).ToParamValue();
+        getSimpleValue.CheckNotNull("getValue");
+        _getValueChain.Add((args) => getSimpleValue(args).ToParamValue(ParamSource.Conventions));
+        return this;
+    }
+
+    public ScriptParamBuilder<T> WithValue(T value)
+    {
+        value.CheckNotNull("getValue");
+        _getValueChain.Add((args)=>value.ToParamValue(ParamSource.Conventions));
         return this;
     }
 
     public ScriptParamBuilder<T> DefaultValue(T defaultValue)
     {
         _defaultValue = defaultValue;
+        _getValueChain.Add((args)=>defaultValue.ToParamValue(ParamSource.DefaultValue));
         return this;
     }
 
@@ -302,81 +388,24 @@ public class ScriptParamBuilder<T>
         return this;
     }
 
-    public ScriptParamBuilder<T> CanBeNull()
-    {
-        _canBeNull = true;
-        return this;
-    }
-
     public ScriptParamBuilder<T> IsSecret()
     {
         _isSecret = true;
         return this;
     }
 
-    public ScriptParam<T> Build()
+    public ScriptParam<T> Build(ScriptArgs args = null)
     {
-        var context = _args.Context;
-        var conventions = _args.Conventions;
-
-        var param = new ScriptParam<T>(_name);
+        var param = new ScriptParam<T>(_name, _getValueChain);
         param.Description = _description;
         param.CanBeNull = _canBeNull;
         param.DefaultValue = _defaultValue;
         param.ValidValues = _validValues;
         param.Required = _required;
-        param.CanBeNull = _canBeNull;
         param.IsSecret = _isSecret;
+        param.Build(args);
 
-        var comparer = EqualityComparer<T>.Default;
-        var nullValue = default(T);
-
-        T value = nullValue;
-        ParamSource varSource = ParamSource.NoValue;
-        if(_getValue!= null)
-        {
-            var paramValue = _getValue(_args);
-            value = paramValue.Value;
-            varSource = paramValue.Source;
-        }
-
-        if(comparer.Equals(value, nullValue))
-        {
-            if(typeof(T)==typeof(string))
-            {
-                var paramValue = conventions.GetStringParam(context, _name);
-                varSource = paramValue.Source;
-                var hasValue = !string.IsNullOrEmpty(paramValue.Value);
-                if(hasValue)
-                {
-                    value = (T)Convert.ChangeType(paramValue.Value, typeof(T));
-                }
-            }
-            if(typeof(T)==typeof(bool))
-            {
-                var paramValue = conventions.GetBoolParam(context, _name);
-                varSource = paramValue.Source;
-
-                var hasValue = paramValue.Source != ParamSource.NoValue;
-                if(hasValue)
-                {
-                    value = (T)Convert.ChangeType(paramValue.Value, typeof(T));
-                }
-            }
-        }
-
-        if(varSource==ParamSource.NoValue && !comparer.Equals(param.DefaultValue, nullValue))
-        {
-            value = param.DefaultValue;
-            varSource = ParamSource.DefaultValue;
-        }
-
-        param.SetValue(value);
-        param.Source = varSource;
-
-        context.Information($"PARAM: {param.Name}={param.Formated}; SOURCE: {varSource}");
-
-        _args.SetParam(param.Name, param.Value);
+        args?.SetParam(param.Name, param.Value);
         
         return param;
     } 
@@ -384,9 +413,7 @@ public class ScriptParamBuilder<T>
 
 public static ScriptParam<T> ShouldHaveValue<T>(this ScriptParam<T> param)
 {
-    if(!param.HasValue)
-        throw new Exception($"Param {param.Name} should have value");
-    if(param.Source == ParamSource.NoValue)
+    if(!param.BuildedValue.HasValue())
         throw new Exception($"Param {param.Name} should have value");
     return param;
 }
@@ -433,21 +460,21 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
 
 public static string GetTemplate(this ScriptArgs args, string fileName)
 {
-    var templateFileName = args.Context.File(fileName);
-    templateFileName = templateFileName.Path.IsRelative? args.TemplatesDir + templateFileName : templateFileName;
-    string templateText = System.IO.File.ReadAllText(templateFileName.Path.FullPath);
+    var templateFileName = args.Context.File(fileName).Path;
+    templateFileName = templateFileName.IsRelative? args.TemplatesDir.Value.CombineWithFilePath(templateFileName) : templateFileName;
+    string templateText = System.IO.File.ReadAllText(templateFileName.FullPath);
     return templateText;
 }
 
 public static string GetResource(this ScriptArgs args, string fileName)
 {
-    var resourceFileName = args.Context.File(fileName);
-    resourceFileName = resourceFileName.Path.IsRelative? args.ResourcesDir + resourceFileName : resourceFileName;
-    string resourceText = System.IO.File.ReadAllText(resourceFileName.Path.FullPath);
+    var resourceFileName = args.Context.File(fileName).Path;
+    resourceFileName = resourceFileName.IsRelative? args.ResourcesDir.Value.CombineWithFilePath(resourceFileName) : resourceFileName;
+    string resourceText = System.IO.File.ReadAllText(resourceFileName.FullPath);
     return resourceText;
 }
 
-public static void AddFileFromResource(this ScriptArgs args, string name, ConvertableDirectoryPath destinationDir, string destinationName = null)
+public static void AddFileFromResource(this ScriptArgs args, string name, DirectoryPath destinationDir, string destinationName = null)
 {
     var context = args.Context;
     var destinationFile = destinationDir + context.File(destinationName??name);
@@ -462,7 +489,7 @@ public static void AddFileFromResource(this ScriptArgs args, string name, Conver
     }
 }
 
-public static void AddFileFromTemplate(this ScriptArgs args, string name, ConvertableDirectoryPath destinationDir, string destinationName = null)
+public static void AddFileFromTemplate(this ScriptArgs args, string name, DirectoryPath destinationDir, string destinationName = null)
 {
     var context = args.Context;
     var destinationFile = destinationDir + context.File(destinationName??name);

@@ -20,30 +20,36 @@ public static ScriptArgs DefaultScenario(this ScriptArgs args)
                     .ValidValues("any", "linux-x64", "win-x64")
                     .Build();
 
-    args.SrcDir              = args.RootDir + context.Directory("src");
-    args.TestDir             = args.RootDir + context.Directory("test");
-    args.ToolsDir            = args.RootDir + context.Directory("tools");
-    var devops_version       = GetVersionFromCommandLineArgs(context);
-    var devops_tool_dir      = args.ToolsDir + context.Directory("microelements.devops") + context.Directory(devops_version);
-    args.ResourcesDir        = devops_tool_dir + context.Directory("resources");
-    args.TemplatesDir        = devops_tool_dir + context.Directory("templates");
+    args.SrcDir              = args.Param<DirectoryPath>("SrcDir").WithValue(a=>a.RootDir.Value.Combine("src")).Build(args);
+    args.TestDir             = args.Param<DirectoryPath>("TestDir").WithValue(a=>a.RootDir.Value.Combine("test")).Build(args);
+    args.ToolsDir            = args.Param<DirectoryPath>("ToolsDir").WithValue(a=>a.RootDir.Value.Combine("tools")).Build(args);
 
-    var solutionName = args.Param<string>("solutionName").WithValue(conventions.GetSolutionName).DefaultValue($"{args.ProjectName.Value}.sln").Build();
+    DirectoryPath GetDevopsToolDir(ScriptArgs a)
+    {
+        var devops_version       = GetVersionFromCommandLineArgs(a.Context);
+        var devops_tool_dir      = a.ToolsDir.Value.Combine("microelements.devops").Combine(devops_version);
+        return devops_tool_dir;
+    }
+
+    args.ResourcesDir        = args.Param<DirectoryPath>("ResourcesDir").WithValue(a=>GetDevopsToolDir(a).Combine("resources")).Build(args);
+    args.TemplatesDir        = args.Param<DirectoryPath>("TemplatesDir").WithValue(a=>GetDevopsToolDir(a).Combine("templates")).Build(args);
+
+    var solutionName = args.Param<string>("solutionName").WithValue(conventions.GetSolutionName).DefaultValue($"{args.ProjectName.Value}.sln").Build(args);
     var solutionFile = args.Param<string>("solutionFile").WithValue(conventions.GetSolutionFileName).Build();
 
-    args.BuildDir = args.BuildDir ?? args.RootDir + context.Directory("build") + context.Directory(args.Configuration.Value);
-    args.TestResultsDir = args.BuildDir + context.Directory("test-results");
-    args.ArtifactsDir = args.BuildDir + context.Directory("artifacts");
+    args.BuildDir = args.Param<DirectoryPath>("BuildDir").WithValue(a=>a.RootDir.Value.Combine("build") + context.Directory(args.Configuration.Value)).Build(args);
+    args.TestResultsDir = args.Param<DirectoryPath>("TestResultsDir").WithValue(args.BuildDir + context.Directory("test-results")).Build(args);
+    args.ArtifactsDir = args.Param<DirectoryPath>("ArtifactsDir").WithValue(args.BuildDir + context.Directory("artifacts")).Build(args);
 
     // KnownFiles
     args.KnownFiles.VersionProps = args.Param<FilePath>("KnownFiles.VersionProps")
-        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("version.props")).Build();
+        .WithValue((a)=>a.RootDir.Value.CombineWithFilePath("version.props")).Build(args);
 
     args.KnownFiles.ChangeLog = args.Param<FilePath>("KnownFiles.ChangeLog")
-        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("CHANGELOG.md")).Build();
+        .WithValue((a)=>a.RootDir.Value.CombineWithFilePath("CHANGELOG.md")).Build(args);
 
     args.KnownFiles.Readme = args.Param<FilePath>("KnownFiles.Readme")
-        .WithValue((a)=>a.RootDir.Path.CombineWithFilePath("README.md")).Build();
+        .WithValue((a)=>a.RootDir.Value.CombineWithFilePath("README.md")).Build(args);
 
     args.Version = Versioning.ReadVersion(context, args.KnownFiles.VersionProps);
 

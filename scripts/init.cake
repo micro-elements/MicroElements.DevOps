@@ -60,8 +60,8 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
     }
 
     context.Information("Adding common.props import...");
-    context.Information("Processing files: "+args.SrcDir.Path + "/**/*.csproj");
-    var projectFiles = context.GetFiles(args.SrcDir.Path + "/**/*.csproj");
+    context.Information("Processing files: "+args.SrcDir + "/**/*.csproj");
+    var projectFiles = context.GetFiles(args.SrcDir + "/**/*.csproj");
     foreach(var projectFile in projectFiles)
     {
         context.Information($"Processing file: {projectFile}");
@@ -137,11 +137,11 @@ public static void FillProjectAttributes(this ScriptArgs args)
 public static void CheckOrDownloadGitIgnore(this ScriptArgs args)
 {
     var context = args.Context;
-    var gitIgnoreFile = args.RootDir + context.File(".gitignore");
-    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
+    var gitIgnoreFile = args.RootDir.Value.CombineWithFilePath(".gitignore");
+    var gitIgnoreFileName = gitIgnoreFile.FullPath;
     var gitIgnoreExternalPath = "https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore";
 
-    if(context.FileExists(gitIgnoreFile.Path))
+    if(context.FileExists(gitIgnoreFile))
     {
         context.Information(".gitignore exists.");
     }
@@ -158,12 +158,12 @@ public static void CheckOrDownloadGitIgnore(this ScriptArgs args)
 public static void GitIgnoreAddCakeRule(this ScriptArgs args)
 {
     var context = args.Context;
-    var gitIgnoreFile = args.RootDir + context.File(".gitignore");
-    var gitIgnoreFileName = gitIgnoreFile.Path.FullPath;
+    var gitIgnoreFile = args.RootDir.Value.CombineWithFilePath(".gitignore");
+    var gitIgnoreFileName = gitIgnoreFile.FullPath;
     var cakeRule = "tools/**";
     var cakeRuleCommented = "# tools/**";
 
-    if(context.FileExists(gitIgnoreFile.Path))
+    if(context.FileExists(gitIgnoreFile))
     {  
         var gitIgnoreText = System.IO.File.ReadAllText(gitIgnoreFileName);
         if(gitIgnoreText.Contains(cakeRule) && !gitIgnoreText.Contains(cakeRuleCommented))
@@ -195,7 +195,7 @@ public static void CreateProjects(this ScriptArgs args)
     string projectName = args.ProjectName.Value;
     string solutionFile = args.GetStringParam("solutionFile");
 
-    var projectDir = args.SrcDir + context.Directory(projectName);
+    var projectDir = args.SrcDir.Value.Combine(projectName);
 
     if(context.DirectoryExists(projectDir))
         context.Information("projectDir already exists.");
@@ -205,11 +205,11 @@ public static void CreateProjects(this ScriptArgs args)
         context.Information("projectDir created.");
 
         // dotnet new classlib
-        context.DotNetCoreTool(projectDir.Path.FullPath, "new", 
+        context.DotNetCoreTool(projectDir.FullPath, "new", 
             new ProcessArgumentBuilder().Append("classlib").Append($"--output {projectName}") );
     }
 
-    var testProjectDir = args.TestDir + context.Directory(projectName+".Tests");
+    var testProjectDir = args.TestDir.Value.Combine(projectName+".Tests");
 
     if(context.DirectoryExists(testProjectDir))
         context.Information("testProjectDir already exists.");
@@ -219,7 +219,7 @@ public static void CreateProjects(this ScriptArgs args)
         context.Information("testProjectDir created.");
 
         // dotnet new test project
-        context.DotNetCoreTool(testProjectDir.Path.FullPath, "new", 
+        context.DotNetCoreTool(testProjectDir.FullPath, "new", 
             new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
     }
 
