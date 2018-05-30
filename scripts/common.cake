@@ -8,8 +8,6 @@ public class ScriptArgs
     public ICakeContext Context {get;}
     public ScriptParam<DirectoryPath> RootDir {get;}
 
-    public ScriptConventions Conventions {get; set;} = new DefaultConventions();
-
     public VersionInfo Version {get; set;}
 
     public ScriptParam<DirectoryPath> BuildDir;
@@ -26,6 +24,7 @@ public class ScriptArgs
         public ScriptParam<FilePath> ChangeLog;
         public ScriptParam<FilePath> Readme;
         public ScriptParam<FilePath> VersionProps;
+        public ScriptParam<FilePath> SolutionFile;
     }
 
     public KnownFilesList KnownFiles = new KnownFilesList();
@@ -48,20 +47,11 @@ public class ScriptArgs
     public ScriptArgs(ICakeContext context, string rootDir = "./")
     {
         Context = context;
-        Conventions = Conventions ?? new DefaultConventions();
         RootDir = Param<DirectoryPath>("RootDir").WithValue(context.Directory(rootDir).Path).Build();
     }
 
     public void Build()
     {
-        SetParam("RootDir", RootDir);
-        SetParam("BuildDir", BuildDir);
-        SetParam("SrcDir", SrcDir);
-        SetParam("TestDir", TestDir);
-        SetParam("ToolsDir", ToolsDir);
-        SetParam("ResourcesDir", ResourcesDir);
-        SetParam("TemplatesDir", TemplatesDir);
-
         PrintParams();
         Context.Information($"VERSION: {Version.VersionPrefix}");
     }
@@ -178,26 +168,8 @@ public delegate T GetSimpleValue<T>(ScriptArgs args);
 /// </summary>
 public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
 
-public class ScriptConventions
+public class DefaultConventions 
 {
-    public GetParam<string> GetStringParam;
-    public GetParam<bool> GetBoolParam;
-    public GetValue<string> GetProjectName;
-    public GetValue<string> GetSolutionName;
-    public GetValue<string> GetSolutionFileName;
-}
-
-public class DefaultConventions : ScriptConventions
-{
-    public DefaultConventions()
-    {
-        GetStringParam = ArgumentOrEnvVar<string>;
-        GetBoolParam = ArgumentOrEnvVar<bool>;
-        GetProjectName = (args) => args.RootDir.Value.GetDirectoryName().ToParamValue();
-        GetSolutionName = (args) => $"{args.ProjectName.Value}.sln".ToParamValue();
-        GetSolutionFileName = (args) => args.RootDir.Value.CombineWithFilePath(args.Context.File(args.GetStringParam("solutionName"))).FullPath.ToParamValue();
-    }
-
     public static ParamValue<T> ArgumentOrEnvVar<T>(ICakeContext context, string name)
     {
         if(context.HasArgument(name))
@@ -234,10 +206,9 @@ public class ScriptParam<T>
     public T Value { get { return GetBuildedValue(); } }
     public T DefaultValue {get; set;}
 
-    public bool Required = true;
+    public bool Required {get; set;} = false;
     public T[] ValidValues {get; set;}
-    public bool CanBeNull = true;
-
+    
     /// <summary>
     /// Builds Param. Evaluates value, checks rules.
     /// </summary>
@@ -334,7 +305,6 @@ public class ScriptParamBuilder<T>
     T _defaultValue;
     T[] _validValues;
     bool _required = false;
-    bool _canBeNull = false;
     bool _isSecret = false;
 
     public ScriptParamBuilder(string name)
@@ -398,7 +368,6 @@ public class ScriptParamBuilder<T>
     {
         var param = new ScriptParam<T>(_name, _getValueChain);
         param.Description = _description;
-        param.CanBeNull = _canBeNull;
         param.DefaultValue = _defaultValue;
         param.ValidValues = _validValues;
         param.Required = _required;
@@ -456,6 +425,13 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
     }
 
     return devops_version;
+}
+
+public static DirectoryPath GetDevopsToolDir(this ScriptArgs args)
+{
+    var devops_version       = GetVersionFromCommandLineArgs(args.Context);
+    var devops_tool_dir      = args.ToolsDir.Value.Combine("microelements.devops").Combine(devops_version);
+    return devops_tool_dir;
 }
 
 public static string GetTemplate(this ScriptArgs args, string fileName)

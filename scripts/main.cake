@@ -18,8 +18,7 @@ Information("MicroElements DevOps scripts.");
 
 var rootDir = Argument("rootDir", "./");
 ScriptArgs args = new ScriptArgs(Context, rootDir);
-args.Conventions = new DefaultConventions();
-args.DefaultScenario();
+args.UseSingleComponentConventions();
 args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////

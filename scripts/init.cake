@@ -192,9 +192,8 @@ public static void GitIgnoreAddCakeRule(this ScriptArgs args)
 public static void CreateProjects(this ScriptArgs args)
 {
     var context = args.Context;
-    string projectName = args.ProjectName.Value;
-    string solutionFile = args.GetStringParam("solutionFile");
-
+    var projectName = args.ProjectName.Value;
+    var solutionFile = args.KnownFiles.SolutionFile;
     var projectDir = args.SrcDir.Value.Combine(projectName);
 
     if(context.DirectoryExists(projectDir))
