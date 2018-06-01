@@ -475,7 +475,12 @@ public static void AddFileFromResource(this ScriptArgs args, string name, Direct
     }
 }
 
-public static void AddFileFromTemplate(this ScriptArgs args, string name, DirectoryPath destinationDir, string destinationName = null)
+public static void AddFileFromTemplate(
+    this ScriptArgs args,
+    string name,
+    DirectoryPath destinationDir,
+    string destinationName = null,
+    Func<string,string> modifyTemplate = null)
 {
     var context = args.Context;
     var destinationFile = destinationDir.CombineWithFilePath(destinationName??name);
@@ -485,6 +490,8 @@ public static void AddFileFromTemplate(this ScriptArgs args, string name, Direct
     else
     {
         var content = args.GetTemplate($"{name}");
+        if(modifyTemplate!=null)
+            content = modifyTemplate(content);
         System.IO.File.WriteAllText(destinationFile.FullPath, content);
         context.Information($"{destinationFile} created.");
     }
@@ -494,8 +501,10 @@ public static string FillTags(string inputXml, ScriptArgs args)
 {
     foreach (var key in args.ParamKeys)
     {
-        inputXml = inputXml.Replace($"$<{key}>$", $"<{args.GetStringParam(key)}");
-        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{args.GetStringParam(key)}</{key}>");
+        var value = args.GetStringParam(key);
+        inputXml = inputXml.Replace($"${key}$", $"{value}");
+        inputXml = inputXml.Replace($"{{{key}}}", $"{value}");
+        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{value}</{key}>");
     }
     return inputXml;
 }

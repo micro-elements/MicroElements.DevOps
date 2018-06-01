@@ -168,6 +168,7 @@ public static void DoVersioning(this ScriptArgs args)
     var version_props_file = args.KnownFiles.VersionProps.Value.FullPath;
     var version_props_file_content = Versioning.FormatVersionProps(version);
 
+    
     var releaseNotes = System.IO.File.ReadAllText(args.KnownFiles.ChangeLog.Value.FullPath);
 
     // todo: release notes!!!

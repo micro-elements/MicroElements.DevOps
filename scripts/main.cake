@@ -54,6 +54,9 @@ Task("AddTravisFile")
 Task("AddCakeBootstrapFiles")
     .Does(() => AddCakeBootstrapFiles(args));
 
+Task("AddChangeLog")
+    .Does(() => AddChangeLog(args));
+
 Task("Build")
     .Does(() => Build(args));
 
@@ -82,6 +85,7 @@ Task("Init")
     .IsDependentOn("CreateCommonProjectFiles")
     .IsDependentOn("AddTravisFile")
     .IsDependentOn("AddCakeBootstrapFiles")
+    .IsDependentOn("AddChangeLog")
 ;
 
 Task("Default")

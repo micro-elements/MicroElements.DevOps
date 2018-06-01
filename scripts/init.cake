@@ -106,11 +106,13 @@ public static void FillProjectAttributes(this ScriptArgs args)
         if(serverIndex>0&&serverIndex<segments.Length-2)
         {
             var userName = segments[serverIndex+1];
+            args.SetParam("gitHubUser", userName);
             args.SetParam("userName", userName);
 
             var projectName = segments[serverIndex+2];
+            args.SetParamIfNotExists("gitHubProject", projectName);
             args.SetParamIfNotExists("projectName", projectName);
-
+            
             //<PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/LICENSE</PackageLicenseUrl>
             args.SetParam("PackageLicenseUrl", $"https://raw.githubusercontent.com/{userName}/{projectName}/master/LICENSE");
         }
@@ -254,4 +256,13 @@ public static void AddCakeBootstrapFiles(this ScriptArgs args)
 {
     args.AddFileFromResource("build.sh", args.RootDir);
     args.AddFileFromResource("build.ps1", args.RootDir);
+}
+
+public static void AddChangeLog(this ScriptArgs args)
+{
+    args.AddFileFromTemplate("CHANGELOG.md", args.RootDir,
+        modifyTemplate:
+            template=>template
+                .Replace("{gitHubUser}", args.GetStringParam("gitHubUser"))
+                .Replace("{gitHubProject}", args.GetStringParam("gitHubProject")));
 }
