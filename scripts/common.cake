@@ -47,12 +47,12 @@ public class ScriptArgs
     public ScriptArgs(ICakeContext context, string rootDir = "./")
     {
         Context = context;
-        RootDir = Param<DirectoryPath>("RootDir").WithValue(context.Directory(rootDir).Path).Build();
+        RootDir = Param<DirectoryPath>("RootDir").WithValue(context.Directory(rootDir).Path).Build(this);
     }
 
     public void Build()
     {
-        PrintParams();
+        // PrintParams();
         Context.Information($"VERSION: {Version.VersionPrefix}");
     }
 
@@ -146,10 +146,12 @@ public class ParamValue<T> : IEquatable<ParamValue<T>>
     }
 }
 
-public static bool HasValue<T>(this ParamValue<T> paramValue)
+public static bool HasNoValue<T>(this ParamValue<T> paramValue)
 {
     return paramValue.Source==ParamSource.NoValue || EqualityComparer<T>.Default.Equals(paramValue.Value, default(T));
 }
+
+public static bool HasValue<T>(this ParamValue<T> paramValue) => !paramValue.HasNoValue();
 
 public delegate ParamValue<T> GetParam<T>(ICakeContext context, string name);
 
@@ -266,8 +268,8 @@ public class ScriptParam<T>
         foreach (var getValue in _getValueChain)
         {
             paramValue = getValue(args) ?? ParamValue<T>.NoValue;
-            if(!HasValue(paramValue))
-                continue;
+            if(HasValue(paramValue))
+                break;
         }
 
         if(HasValue(paramValue))
@@ -279,7 +281,7 @@ public class ScriptParam<T>
         return paramValue;
     }
 
-    public string Formated => IsSecret? "***" : $"{Value}";
+    public string Formated => IsSecret? "***" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
 
     public static implicit operator T(ScriptParam<T> scriptParam) => scriptParam.Value;
 
@@ -322,21 +324,21 @@ public class ScriptParamBuilder<T>
     public ScriptParamBuilder<T> WithValue(GetSimpleValue<T> getSimpleValue)
     {
         getSimpleValue.CheckNotNull("getValue");
-        _getValueChain.Add((args) => getSimpleValue(args).ToParamValue(ParamSource.Conventions));
+        _getValueChain.Add(args=>getSimpleValue(args).ToParamValue(ParamSource.Conventions));
         return this;
     }
 
     public ScriptParamBuilder<T> WithValue(T value)
     {
-        value.CheckNotNull("getValue");
-        _getValueChain.Add((args)=>value.ToParamValue(ParamSource.Conventions));
+        value.CheckNotNull("value");
+        _getValueChain.Add(args=>value.ToParamValue(ParamSource.Conventions));
         return this;
     }
 
     public ScriptParamBuilder<T> DefaultValue(T defaultValue)
     {
         _defaultValue = defaultValue;
-        _getValueChain.Add((args)=>defaultValue.ToParamValue(ParamSource.DefaultValue));
+        _getValueChain.Add(args=>defaultValue.ToParamValue(ParamSource.DefaultValue));
         return this;
     }
 
@@ -364,19 +366,27 @@ public class ScriptParamBuilder<T>
         return this;
     }
 
-    public ScriptParam<T> Build(ScriptArgs args = null)
+    public ScriptParam<T> Build(ScriptArgs args)
     {
-        var param = new ScriptParam<T>(_name, _getValueChain);
-        param.Description = _description;
-        param.DefaultValue = _defaultValue;
-        param.ValidValues = _validValues;
-        param.Required = _required;
-        param.IsSecret = _isSecret;
-        param.Build(args);
+        try
+        {
+            var param = new ScriptParam<T>(_name, _getValueChain);
+            param.Description = _description;
+            param.DefaultValue = _defaultValue;
+            param.ValidValues = _validValues;
+            param.Required = _required;
+            param.IsSecret = _isSecret;
+            param.Build(args);
 
-        args?.SetParam(param.Name, param.Value);
-        
-        return param;
+            args.SetParam(param.Name, param.Value);
+            
+            return param;
+        }
+        catch (System.Exception e)
+        {
+            args.Context.Error($@"Building param ""{_name}"". Error: {e.ToString()}");
+            throw;
+        }
     } 
 }
 

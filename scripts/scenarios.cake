@@ -4,19 +4,19 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
 {
     var context = args.Context;
 
-    args.Target                  = args.Param<string>("Target").DefaultValue("Default").Build();
-    args.Configuration           = args.Param<string>("Configuration").DefaultValue("Release").ValidValues("Release", "Debug").Build();
+    args.Target                  = args.Param<string>("Target").DefaultValue("Default").Build(args);
+    args.Configuration           = args.Param<string>("Configuration").DefaultValue("Release").ValidValues("Release", "Debug").Build(args);
 
-    args.upload_nuget            = args.Param<string>("upload_nuget").DefaultValue("https://api.nuget.org/v3/index.json").Build();
-    args.upload_nuget_api_key    = args.Param<string>("upload_nuget_api_key").DefaultValue("00000000-0000-0000-0000-000000000000").IsSecret().Build();
-    args.nuget_source1           = args.Param<string>("nuget_source1").DefaultValue("https://api.nuget.org/v3/index.json").Build();
-    args.nuget_source2           = args.Param<string>("nuget_source2").Build();
-    args.nuget_source3           = args.Param<string>("nuget_source3").Build();
+    args.upload_nuget            = args.Param<string>("upload_nuget").DefaultValue("https://api.nuget.org/v3/index.json").Build(args);
+    args.upload_nuget_api_key    = args.Param<string>("upload_nuget_api_key").DefaultValue("00000000-0000-0000-0000-000000000000").IsSecret().Build(args);
+    args.nuget_source1           = args.Param<string>("nuget_source1").DefaultValue("https://api.nuget.org/v3/index.json").Build(args);
+    args.nuget_source2           = args.Param<string>("nuget_source2").Build(args);
+    args.nuget_source3           = args.Param<string>("nuget_source3").Build(args);
 
     // any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
     args.RuntimeName = args.Param<string>("runtimeName").DefaultValue("any")
                     .ValidValues("any", "linux-x64", "win-x64")
-                    .Build();
+                    .Build(args);
 
     args.ProjectName   = args.Param<string>("ProjectName").WithValue(a=>a.RootDir.Value.GetDirectoryName()).Build(args);
     args.SrcDir        = args.Param<DirectoryPath>("SrcDir").WithValue(a=>a.RootDir.Value.Combine("src")).Build(args);
