@@ -8,7 +8,7 @@
 #load testing.cake
 #load packaging.cake
 #load versioning.cake
-#load scenarios.cake
+#load conventions.cake
 
 Information("MicroElements DevOps scripts.");
 
