@@ -7,17 +7,14 @@
 public static void ToolArguments(ScriptArgs args)
 {
     // todo: is there ability to do it best?
-    var nugetSourcesArg = new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3, args.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
     var runtimeArg = args.RuntimeName != "any" ? $" --runtime {args.RuntimeName}" : "";
     var sourceLinkArgs =" /p:SourceLinkCreate=true";
     var noSourceLinkArgs =" /p:SourceLinkCreate=false";
     var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
     var testResultsDirArgs = $" --results-directory {args.TestResultsDir}";
-
-    args.Param<string>("nugetSourcesArg")
-        .WithValue(a=>new string[]{a.nuget_source1, a.nuget_source2, a.nuget_source3, a.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Aggregate("", (s, s1) => $@"{s} --source ""{s1}"""))
-        .Build(args);
 }
+
+public static string NugetSourcesArg(this ScriptArgs args) => new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3, args.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -27,7 +24,7 @@ public static void Build(ScriptArgs args)
 {
     var context = args.Context;
 
-    var nugetSourcesArg = new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3, args.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
+    var nugetSourcesArg = args.NugetSourcesArg();
     var sourceLinkArgs =" /p:SourceLinkCreate=true";
     var noSourceLinkArgs =" /p:SourceLinkCreate=false";
     var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
@@ -35,6 +32,7 @@ public static void Build(ScriptArgs args)
     var settings = new DotNetCoreBuildSettings 
     { 
         Configuration = args.Configuration,
+        NoIncremental = true,
         ArgumentCustomization = arg => arg
             .Append(nugetSourcesArg)
             .Append(noSourceLinkArgs)
@@ -46,6 +44,8 @@ public static void Build(ScriptArgs args)
     foreach(var project in projects)
     {
         context.Information($"Building project: {project}");
+        // Delete old packages
+        context.DeleteFiles($"{args.SrcDir}/**/*.nupkg");
         context.DotNetCoreBuild(project.FullPath, settings);
     }
 }

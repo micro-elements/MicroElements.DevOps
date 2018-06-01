@@ -463,14 +463,14 @@ public static string GetResource(this ScriptArgs args, string fileName)
 public static void AddFileFromResource(this ScriptArgs args, string name, DirectoryPath destinationDir, string destinationName = null)
 {
     var context = args.Context;
-    var destinationFile = destinationDir + context.File(destinationName??name);
+    var destinationFile = destinationDir.CombineWithFilePath(destinationName??name);
 
     if(context.FileExists(destinationFile))
         context.Information($"{destinationFile} file already exists.");
     else
     {
         var content = args.GetResource($"{name}");
-        System.IO.File.WriteAllText(destinationFile, content);
+        System.IO.File.WriteAllText(destinationFile.FullPath, content);
         context.Information($"{destinationFile} created.");
     }
 }
@@ -478,14 +478,14 @@ public static void AddFileFromResource(this ScriptArgs args, string name, Direct
 public static void AddFileFromTemplate(this ScriptArgs args, string name, DirectoryPath destinationDir, string destinationName = null)
 {
     var context = args.Context;
-    var destinationFile = destinationDir + context.File(destinationName??name);
+    var destinationFile = destinationDir.CombineWithFilePath(destinationName??name);
 
     if(context.FileExists(destinationFile))
         context.Information($"{destinationFile} file already exists.");
     else
     {
         var content = args.GetTemplate($"{name}");
-        System.IO.File.WriteAllText(destinationFile, content);
+        System.IO.File.WriteAllText(destinationFile.FullPath, content);
         context.Information($"{destinationFile} created.");
     }
 }

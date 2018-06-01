@@ -29,9 +29,9 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
     var solutionName = args.Param<string>("solutionName").WithValue(a=>$"{a.ProjectName}.sln").DefaultValue($"{args.ProjectName.Value}.sln").Build(args);
     args.KnownFiles.SolutionFile = args.Param<FilePath>("solutionFile").WithValue(a=>a.RootDir.Value.CombineWithFilePath(solutionName.Value)).Build(args);
 
-    args.BuildDir = args.Param<DirectoryPath>("BuildDir").WithValue(a=>a.RootDir.Value.Combine("build") + a.Context.Directory(a.Configuration.Value)).Build(args);
-    args.TestResultsDir = args.Param<DirectoryPath>("TestResultsDir").WithValue(a=>a.BuildDir + a.Context.Directory("test-results")).Build(args);
-    args.ArtifactsDir = args.Param<DirectoryPath>("ArtifactsDir").WithValue(a=>a.BuildDir + a.Context.Directory("artifacts")).Build(args);
+    args.BuildDir = args.Param<DirectoryPath>("BuildDir").WithValue(a=>a.RootDir.Value.Combine("build").Combine(a.Configuration.Value)).Build(args);
+    args.TestResultsDir = args.Param<DirectoryPath>("TestResultsDir").WithValue(a=>a.BuildDir.Value.Combine("test-results")).Build(args);
+    args.ArtifactsDir = args.Param<DirectoryPath>("ArtifactsDir").WithValue(a=>a.BuildDir.Value.Combine("artifacts")).Build(args);
 
     // KnownFiles
     args.KnownFiles.VersionProps = args.Param<FilePath>("KnownFiles.VersionProps")

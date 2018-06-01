@@ -45,7 +45,7 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
         context.Information($"{version_props_file_name} created.");
     }
 
-    var common_props_file_name = args.RootDir + context.File("common.props");
+    var common_props_file_name = args.RootDir.Value.CombineWithFilePath("common.props").FullPath;
     if(context.FileExists(common_props_file_name))
         context.Information("common.props file already exists.");
     else

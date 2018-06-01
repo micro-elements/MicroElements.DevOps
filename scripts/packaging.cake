@@ -94,6 +94,8 @@ public static void CopyPackagesToArtifacts(this ScriptArgs args)
 
     var fileMask = $"{args.SrcDir}/**/*.nupkg";
     var files = context.GetFiles(fileMask);
+    context.EnsureDirectoryExists(args.ArtifactsDir);
+    context.CleanDirectory(args.ArtifactsDir);
     context.CopyFiles(files, args.ArtifactsDir);
 }
 
