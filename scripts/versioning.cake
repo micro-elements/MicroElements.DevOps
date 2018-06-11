@@ -8,7 +8,7 @@ public class VersionInfo
 
     public int BuildNumber = 0;
 
-    public string VersionPrefix;
+    public string VersionPrefix;//base version???
 
     public string VersionSuffix = "";
 
@@ -107,35 +107,11 @@ public class Versioning
         {
             var isLocalBuild = context.BuildSystem().IsLocalBuild;
 
-            var result = ProcessUtils.StartProcessAndReturnOutput(context, "git", "branch");
-            version.BranchName = result.Output
-                .SplitLines()
-                .FirstOrDefault(line=>line.StartsWith("*"))
-                .Substring(1)
-                .Trim();
-            context.Information($"BranchName: {version.BranchName}");
+            version.BranchName = context.GetGitBranch();
+            version.CommitSha = context.GetGitCommit();
 
-            var result2 = ProcessUtils.StartProcessAndReturnOutput(context, "git", $"rev-parse {version.BranchName}");
-            version.CommitSha = result2.Output.Trim();
-            context.Information($"SHA: {version.CommitSha}");
-
-            //git log --max-count 2 -- version.json
-            //git log --max-count 2 --pretty=oneline -- version.json
-
-            /*
-            562cc83398f6667deb39f7c3ce3fd28510b5fd43 version in version.json
-            fb86462fa8b02874613180586633be5ffc55e922 version
-            */
-
-            var versionFileName = "version.json";
-            var result3 = ProcessUtils.StartProcessAndReturnOutput(context, "git", $"log --max-count 2 --pretty=oneline -- {versionFileName}", true);
-            context.Information($"result3: {result3.Output}");
-            var revs = result.Output
-                .SplitLines()
-                .Select(line=> line.Split().First())
-                .ToList();
-                
-            //git rev-list --count feature/jenkins5
+            context.Information($"GitBranch: {version.CommitSha}");
+            context.Information($"GitCommit: {version.CommitSha}");
 
         }
 
@@ -145,35 +121,119 @@ public class Versioning
 
 public static void DoVersioning(this ScriptArgs args)
 {
+    //UseGitVersion, UseManualVersioning, UseGitHeight, UseCIVersioning
     var context = args.Context;
+    bool useBuildNumberAsPatch = true;
+    bool useManualVersioning = true;
+    string prereleasePrefix = "unstable";//ci, preview-0000, beta-000
 
-    var version = Versioning.GetVersionInfo(context, args.Version);
-    version.IsRelease = version.BranchName == "master" || version.BranchName.StartsWith("release/");
+    VersionInfo version = args.Version;
+    
+    if(useManualVersioning)
+        version = Versioning.GetVersionInfo(context, args.Version);
 
-    if(version.IsRelease && version.BuildNumber>0)
+    version = version.SetIsReleaseAsGitFlow(args);
+
+    if(useBuildNumberAsPatch)
     {
-        var semVerPatch = 0; //ParseSemVer(version.VersionPrefix);
-        if(semVerPatch==0)
+        if(version.IsRelease && version.BuildNumber>0)
         {
-            version.VersionPrefix = version.VersionPrefix+$".{version.BuildNumber}";
+            var semVerPatch = 0; //ParseSemVer(version.VersionPrefix);
+            if(semVerPatch==0)
+            {
+                version.VersionPrefix = version.VersionPrefix+$".{version.BuildNumber}";
+            }
         }
     }
-    
-    // todo: prereleaseTag to conventions
-    var prereleaseTag = "";
-    if(!version.IsRelease)
-        prereleaseTag = $"unstable.{version.BuildNumber}";
-    version.VersionSuffix = prereleaseTag;
-  
-    var version_props_file = args.KnownFiles.VersionProps.Value.FullPath;
-    var version_props_file_content = Versioning.FormatVersionProps(version);
 
-    
-    var releaseNotes = System.IO.File.ReadAllText(args.KnownFiles.ChangeLog.Value.FullPath);
+    if(!useManualVersioning)
+    {
+        var prereleaseTag = "";
+        if(!version.IsRelease)
+            prereleaseTag = $"{prereleasePrefix}.{version.BuildNumber}";
+        version.VersionSuffix = prereleaseTag;
+    }
 
-    // todo: release notes!!!
-    System.IO.File.WriteAllText(version_props_file, version_props_file_content);
+    // ChangeLog
+    version.SetReleaseNotesFromChangeLog(args);
+
+    // Format and write version.props
+    var versionPropsFileName = args.KnownFiles.VersionProps.Value.FullPath;
+    var versionPropsContent= Versioning.FormatVersionProps(version);
+    System.IO.File.WriteAllText(versionPropsFileName, versionPropsContent);
 
     context.Information("VERSION_PROPS:");
-    context.Information(version_props_file_content);
+    context.Information(versionPropsContent);
+}
+
+public static VersionInfo SetIsReleaseAsGitFlow(this VersionInfo version, ScriptArgs args)
+{
+    version.IsRelease = version.BranchName == "master" || version.BranchName.StartsWith("release/");
+    return version;
+}
+
+public static VersionInfo SetReleaseNotesFromChangeLog(this VersionInfo version, ScriptArgs args)
+{
+    var changeLogFileName = args.KnownFiles.ChangeLog.Value.FullPath;
+    if(System.IO.File.Exists(changeLogFileName))
+        version.ReleaseNotes = System.IO.File.ReadAllText(changeLogFileName);
+    return version;
+}
+
+public static string GitCommand(this ICakeContext context, string command)
+{
+    context.Information($"Running git {command}");
+    var result = ProcessUtils.StartProcessAndReturnOutput(context, "git", command);
+    context.Debug($"ExitCode: {result.ExitCode}");
+    context.Information($"Output: {result.Output}");
+    return (result.Output??"").Trim();
+}
+
+public static string GetGitBranch(this ICakeContext context)
+{
+    // Other variants: // https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
+    var branchName = context.GitCommand("name-rev --name-only HEAD");
+    return branchName;
+}
+
+public static string GetGitBranch2(this ICakeContext context)
+{
+    var result = context.GitCommand("branch");
+    var branchName = result
+        .SplitLines()
+        .FirstOrDefault(line=>line.StartsWith("*"))
+        .Substring(1)
+        .Trim();
+    return branchName;
+}
+
+public static string GetGitCommit(this ICakeContext context)
+{
+    //log --format=format:%h -n 1
+    //log --format=format:%H -n 1
+    //rev-parse master
+    var commitSha = context.GitCommand("log --format=format:%H -n 1");
+    return commitSha;
+}
+
+public static string GetFileHistory(this ICakeContext context)
+{
+    //git log --max-count 2 -- version.props
+    //git log --max-count 2 --pretty=oneline -- version.props
+
+    /*
+    562cc83398f6667deb39f7c3ce3fd28510b5fd43 version in version.props
+    fb86462fa8b02874613180586633be5ffc55e922 version
+    */
+
+    var versionFileName = "version.props";
+    var result3 = context.GitCommand($"log --max-count 2 --pretty=oneline -- {versionFileName}");
+
+    var revs = result3
+        .SplitLines()
+        .Select(line=> line.Split().First())
+        .ToList();
+        
+    //git rev-list --count feature/jenkins5
+    return "";
 }
