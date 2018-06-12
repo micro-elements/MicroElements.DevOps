@@ -16,8 +16,7 @@ Information("MicroElements DevOps scripts.");
 // SCRIPT ARGS AND CONVENTIONS
 ///////////////////////////////////////////////////////////////////////////////
 
-var rootDir = Argument("rootDir", "./");
-ScriptArgs args = new ScriptArgs(Context, rootDir);
+ScriptArgs args = new ScriptArgs(Context);
 args.UseSingleComponentConventions();
 args.Build();
 
@@ -95,6 +94,7 @@ Task("Default")
     ;
 
 Task("Travis")
+    .IsDependentOn("DoVersioning")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")

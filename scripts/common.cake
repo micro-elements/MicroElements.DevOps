@@ -557,3 +557,47 @@ public class ProcessUtils
         return (exitCodeWithArgument, outputString.ToString());
     }
 }
+
+/// <summary>
+/// Temporary sets logging verbosity.
+/// </summary>
+/// <example>
+/// <code>
+/// // Temporary sets logging verbosity to Diagnostic.
+/// using(context.UseVerbosity(Verbosity.Diagnostic))
+/// {
+///     console.DotNetCoreBuild(project, settings);
+/// }
+/// </code>
+/// </example>
+public static VerbosityChanger UseVerbosity(this ICakeContext context, Verbosity newVerbosity) =>
+     new VerbosityChanger(context.Log, newVerbosity);
+
+/// <summary>
+/// Temporary sets logging verbosity to Diagnostic.
+/// </summary>
+/// <example>
+/// <code>
+/// // Temporary sets logging verbosity to Diagnostic.
+/// using(context.UseDiagnosticVerbosity())
+/// {
+///     console.DotNetCoreBuild(project, settings);
+/// }
+/// </code>
+/// </example>
+public static VerbosityChanger UseDiagnosticVerbosity(this ICakeContext context) =>
+    context.UseVerbosity(Verbosity.Diagnostic);
+
+public class VerbosityChanger : IDisposable
+{
+    ICakeLog _log;
+    Verbosity _oldVerbosity;
+
+    public VerbosityChanger(ICakeLog log, Verbosity newVerbosity)
+    {
+        _log = log;
+        _oldVerbosity = log.Verbosity;
+    }
+
+    public void Dispose() => _log.Verbosity = _oldVerbosity;
+}

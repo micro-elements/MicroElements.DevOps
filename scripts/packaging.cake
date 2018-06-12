@@ -84,7 +84,8 @@ public class DotNetUtils
             WorkingDirectory = "./"
         };
 
-        context.DotNetCorePack(nugetCsprojFileName.FullPath, packSettings);
+        using(context.UseDiagnosticVerbosity())
+            context.DotNetCorePack(nugetCsprojFileName.FullPath, packSettings);
     }
 }
 

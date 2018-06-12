@@ -134,7 +134,7 @@ public static void DoVersioning(this ScriptArgs args)
 
     version = version.SetIsReleaseAsGitFlow(args);
 
-    if(useBuildNumberAsPatch)
+    if(useBuildNumberAsPatch && !useManualVersioning)
     {
         if(version.IsRelease && version.BuildNumber>0)
         {
