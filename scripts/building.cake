@@ -14,7 +14,7 @@ public static void ToolArguments(ScriptArgs args)
     var testResultsDirArgs = $" --results-directory {args.TestResultsDir}";
 }
 
-public static string NugetSourcesArg(this ScriptArgs args) => new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3, args.upload_nuget}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
+public static string NugetSourcesArg(this ScriptArgs args) => new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -30,7 +30,7 @@ public static void Build(ScriptArgs args)
     var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
 
     var settings = new DotNetCoreBuildSettings 
-    { 
+    {
         Configuration = args.Configuration,
         NoIncremental = true,
         ArgumentCustomization = arg => arg
@@ -38,14 +38,23 @@ public static void Build(ScriptArgs args)
             .Append(noSourceLinkArgs)
     };
 
+    //var buildParams = settings.ArgumentCustomization(new ProcessArgumentBuilder()).Render();
+    //context.Information($"BuildParams: {buildParams}");
+
     var projectsMask = $"{args.SrcDir}/**/*.csproj";
     var projects = context.GetFiles(projectsMask).ToList();
     context.Information($"ProjectsMask: {projectsMask}, Found: {projects.Count} project(s).");
     foreach(var project in projects)
     {
         context.Information($"Building project: {project}");
+        
         // Delete old packages
         context.DeleteFiles($"{args.SrcDir}/**/*.nupkg");
+
+        // Build project
+        var oldVerbosity = context.Log.Verbosity;
+        context.Log.Verbosity = Verbosity.Diagnostic;
         context.DotNetCoreBuild(project.FullPath, settings);
+        context.Log.Verbosity = oldVerbosity;
     }
 }

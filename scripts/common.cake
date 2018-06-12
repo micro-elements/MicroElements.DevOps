@@ -47,7 +47,9 @@ public class ScriptArgs
     public ScriptArgs(ICakeContext context, string rootDir = "./")
     {
         Context = context;
-        RootDir = Param<DirectoryPath>("RootDir").WithValue(context.Directory(rootDir).Path).Build(this);
+        RootDir = Param<DirectoryPath>("RootDir")
+            .WithValue(args=>context.Directory(rootDir).Path.ToParamValue(ParamSource.CommandLine))
+            .Build(this);
     }
 
     public void Build()
@@ -60,7 +62,16 @@ public class ScriptArgs
     {
         var builder = new ScriptParamBuilder<T>(name);
         if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
-            builder.WithValue(args=>DefaultConventions.ArgumentOrEnvVar<T>(args.Context, name));
+            builder.WithValue(args=>args.Context.ArgumentOrEnvVar<T>(name));
+        if(typeof(T) == typeof(DirectoryPath))
+            builder.WithValue(args=>
+            {
+                var paramValue = args.Context.ArgumentOrEnvVar<string>(name);
+                var dirPathParam = paramValue.HasValue()?
+                    args.Context.Directory(paramValue.Value).Path.ToParamValue(paramValue.Source) as ParamValue<T>
+                    : ParamValue<T>.NoValue;
+                return dirPathParam ?? ParamValue<T>.NoValue;
+            });
         return builder;
     }
 
@@ -170,24 +181,21 @@ public delegate T GetSimpleValue<T>(ScriptArgs args);
 /// </summary>
 public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
 
-public class DefaultConventions 
+public static ParamValue<T> ArgumentOrEnvVar<T>(this ICakeContext context, string name)
 {
-    public static ParamValue<T> ArgumentOrEnvVar<T>(ICakeContext context, string name)
-    {
-        if(context.HasArgument(name))
-            return new ParamValue<T>(context.Argument<T>(name, default(T)), ParamSource.CommandLine);
-        if(context.HasEnvironmentVariable(name))
-            return new ParamValue<T>((T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
-        return new ParamValue<T>(default(T), ParamSource.NoValue);
-    }
+    if(context.HasArgument(name))
+        return new ParamValue<T>(context.Argument<T>(name, default(T)), ParamSource.CommandLine);
+    if(context.HasEnvironmentVariable(name))
+        return new ParamValue<T>((T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
+    return new ParamValue<T>(default(T), ParamSource.NoValue);
+}
 
-    public ScriptParamBuilder<T> Param<T>(string name)
-    {
-        var builder = new ScriptParamBuilder<T>(name);
-        if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
-            builder.WithValue(args=>DefaultConventions.ArgumentOrEnvVar<T>(args.Context, name));
-        return builder;
-    }
+public ScriptParamBuilder<T> Param<T>(string name)
+{
+    var builder = new ScriptParamBuilder<T>(name);
+    if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
+        builder.WithValue(args=>ArgumentOrEnvVar<T>(args.Context, name));
+    return builder;
 }
 
 public class ScriptParam<T> 
