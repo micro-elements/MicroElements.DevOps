@@ -35,7 +35,7 @@ public static void Build(ScriptArgs args)
         NoIncremental = true,
         ArgumentCustomization = arg => arg
             .Append(nugetSourcesArg)
-            .Append(noSourceLinkArgs)
+            .Append(sourceLinkArgs)
     };
 
     var projectsMask = $"{args.SrcDir}/**/*.csproj";
