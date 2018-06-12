@@ -37,12 +37,12 @@ public static void Build(ScriptArgs args)
         using(context.UseDiagnosticVerbosity())
         {
             context.DotNetCoreBuild(project.FullPath, settings);
+        }
 
-            // test sourcelink result
-            if(args.UseSourceLink && args.TestSourceLink)
-            {
-                TestSourceLink(args, project);
-            }
+        // test sourcelink result
+        if(args.UseSourceLink && args.TestSourceLink)
+        {
+            TestSourceLink(args, project);
         }
     }
 }

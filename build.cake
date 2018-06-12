@@ -12,7 +12,7 @@ var target = Argument("target", "Default");
 
 ScriptArgs args = new ScriptArgs(Context, "./");
 args.UseSingleComponentConventions();
-args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory("./artifacts")).Build(args);
+args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory($"{args.RootDir}/artifacts")).Build(args);
 args.Build();
 
 Task("Info")
