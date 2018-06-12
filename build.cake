@@ -44,4 +44,9 @@ Task("Default")
     .IsDependentOn("Package")
 ;
 
+Task("Travis")
+    .IsDependentOn("Package")
+    .IsDependentOn("UploadPackage")
+;
+
 RunTarget(target);
