@@ -8,8 +8,11 @@ var target = Argument("target", "Default");
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
 #load ./scripts/packaging.cake
+#load ./scripts/conventions.cake
 
 ScriptArgs args = new ScriptArgs(Context, "./");
+args.UseSingleComponentConventions();
+args.Build();
 
 Task("Info")
 .Does(() => {
