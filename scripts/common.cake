@@ -597,6 +597,7 @@ public class VerbosityChanger : IDisposable
     {
         _log = log;
         _oldVerbosity = log.Verbosity;
+        _log.Verbosity = newVerbosity;
     }
 
     public void Dispose() => _log.Verbosity = _oldVerbosity;
