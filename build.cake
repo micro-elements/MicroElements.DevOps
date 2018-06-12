@@ -11,8 +11,7 @@ var target = Argument("target", "Default");
 #load ./scripts/conventions.cake
 
 ScriptArgs args = new ScriptArgs(Context, "./");
-args.UseSingleComponentConventions();
-args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory("./artifacts"));
+args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory("./artifacts")).Build(args);
 args.Build();
 
 Task("Info")
