@@ -7,7 +7,7 @@
 echo "Starting build.sh"
 
 CAKE_VERSION=0.27.2
-DEVOPS_VERSION=0.5.0-beta.5
+DEVOPS_VERSION=0.5.0-beta.6
 
 # Define directories.
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -37,7 +37,7 @@ echo "TOOLS_DIR: $TOOLS_DIR"
 echo "CAKE_DLL: $CAKE_DLL"
 echo "NUGET_URL: $NUGET_URL"
 echo "CAKE_PROPS_PATH: $CAKE_PROPS_PATH"
-echo "CAKE_ARGUMENTS: $CAKE_ARGUMENTS"
+echo "CAKE_ARGUMENTS: ${CAKE_ARGUMENTS[*]}"
 
 ###########################################################################
 # RESTORE CAKE AND LIBS

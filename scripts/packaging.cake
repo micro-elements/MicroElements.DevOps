@@ -97,7 +97,8 @@ public static void CopyPackagesToArtifacts(this ScriptArgs args)
     var files = context.GetFiles(fileMask);
     context.EnsureDirectoryExists(args.ArtifactsDir);
     context.CleanDirectory(args.ArtifactsDir);
-    context.CopyFiles(files, args.ArtifactsDir);
+    using(context.UseDiagnosticVerbosity())
+        context.CopyFiles(files, args.ArtifactsDir);
 }
 
 public static void UploadPackages(this ScriptArgs args)
