@@ -39,6 +39,9 @@ public class ScriptArgs
     public ScriptParam<string> nuget_source2 {get;set;}
     public ScriptParam<string> nuget_source3 {get;set;}
 
+    public ScriptParam<bool> UseSourceLink {get; set;} = new ScriptParam<bool>("UseSourceLink", true);
+    public ScriptParam<bool> TestSourceLink {get; set;} = new ScriptParam<bool>("TestSourceLink", true);
+
     /// <summary>
     /// Script parameters.
     /// </summary>
@@ -202,10 +205,16 @@ public class ScriptParam<T>
 {
     private List<GetValue<T>> _getValueChain = new List<GetValue<T>>();
 
-    public ScriptParam(string name, IEnumerable<GetValue<T>> getValueChain  = null)
+    public ScriptParam(string name, params GetValue<T>[] getValueChain)
     {
         Name = name;
         _getValueChain.AddRange(getValueChain.NotNull());
+    }
+
+    public ScriptParam(string name, T defaultValue):
+        this(name, args=>defaultValue.ToParamValue(ParamSource.DefaultValue))
+    {
+        DefaultValue = defaultValue;
     }
 
     public string Name {get;}
@@ -378,7 +387,7 @@ public class ScriptParamBuilder<T>
     {
         try
         {
-            var param = new ScriptParam<T>(_name, _getValueChain);
+            var param = new ScriptParam<T>(_name, _getValueChain.ToArray());
             param.Description = _description;
             param.DefaultValue = _defaultValue;
             param.ValidValues = _validValues;
@@ -532,17 +541,23 @@ public static T[] NotNull<T>(this T[] collection) => collection ?? Array.Empty<T
 
 public class ProcessUtils
 {
-    public static (int ExitCode, string Output) StartProcessAndReturnOutput(ICakeContext context, FilePath fileName, ProcessArgumentBuilder args, bool printOutput = false)
+    public static (int ExitCode, string Output) StartProcessAndReturnOutput(
+        ICakeContext context,
+        FilePath fileName,
+        ProcessArgumentBuilder args,
+        string workingDirectory = null,
+        bool printOutput = false)
     {
         if(printOutput)
             context.Information($"{fileName} {args.Render()}");
         
         IEnumerable<string> redirectedStandardOutput;
         var exitCodeWithArgument =
-            context.StartProcess( fileName,
+            context.StartProcess(fileName,
                 new ProcessSettings {
                     Arguments = args,
-                    RedirectStandardOutput = true
+                    RedirectStandardOutput = true,
+                    WorkingDirectory = workingDirectory
                 },
                 out redirectedStandardOutput
             );

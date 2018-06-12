@@ -45,5 +45,8 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
 
     args.Version = Versioning.ReadVersion(context, args.KnownFiles.VersionProps);
 
+    args.UseSourceLink = args.Param<bool>("UseSourceLink").DefaultValue(true).Build(args);
+    args.TestSourceLink = args.Param<bool>("TestSourceLink").DefaultValue(true).Build(args);
+
     return args;
 }

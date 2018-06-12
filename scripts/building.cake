@@ -1,20 +1,7 @@
 #load common.cake
 
-//////////////////////////////////////////////////////////////////////
-// TOOL ARGUMENTS 
-//////////////////////////////////////////////////////////////////////
-
-public static void ToolArguments(ScriptArgs args)
-{
-    // todo: is there ability to do it best?
-    var runtimeArg = args.RuntimeName != "any" ? $" --runtime {args.RuntimeName}" : "";
-    var sourceLinkArgs =" /p:SourceLinkCreate=true";
-    var noSourceLinkArgs =" /p:SourceLinkCreate=false";
-    var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
-    var testResultsDirArgs = $" --results-directory {args.TestResultsDir}";
-}
-
-public static string NugetSourcesArg(this ScriptArgs args) => new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
+public static string NugetSourcesArg(this ScriptArgs args) =>
+    new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -25,9 +12,7 @@ public static void Build(ScriptArgs args)
     var context = args.Context;
 
     var nugetSourcesArg = args.NugetSourcesArg();
-    var sourceLinkArgs =" /p:SourceLinkCreate=true";
-    var noSourceLinkArgs =" /p:SourceLinkCreate=false";
-    var sourceLinkArgsFull =" /p:SourceLinkCreate=true /p:SourceLinkServerType={SourceLinkServerType} /p:SourceLinkUrl={SourceLinkUrl}";
+    var sourceLinkArgs = args.UseSourceLink? "/p:SourceLinkCreate=true" : "/p:SourceLinkCreate=false";
 
     var settings = new DotNetCoreBuildSettings 
     {
@@ -52,6 +37,38 @@ public static void Build(ScriptArgs args)
         using(context.UseDiagnosticVerbosity())
         {
             context.DotNetCoreBuild(project.FullPath, settings);
+
+            // test sourcelink result
+            if(args.UseSourceLink && args.TestSourceLink)
+            {
+                TestSourceLink(args, project);
+            }
+        }
+    }
+}
+
+public static void TestSourceLink(ScriptArgs args, FilePath project)
+{
+    var context = args.Context;
+    var projectDir = project.GetDirectory().FullPath;
+    var mask = $"{projectDir}/**/*.nupkg";
+    var nupkgs = context.GetFiles(mask).ToList();
+    foreach (var nupkg in nupkgs)
+    {
+        var result = ProcessUtils.StartProcessAndReturnOutput(context, "dotnet", "sourcelink", projectDir);
+        var hasSourceLinkTool = result.ExitCode==0;
+        if(hasSourceLinkTool)
+        {
+            // dotnet sourcelink test
+            context.DotNetCoreTool(project.FullPath, "sourcelink",
+                new ProcessArgumentBuilder()
+                    .Append("test")
+                    .Append(nupkg.FullPath));
+        }
+        else
+        {
+            context.Warning($"sourcelink tool is not available for project {project}");
+            context.Warning($"To test source link add: <DotNetCliToolReference Include=\"dotnet-sourcelink\" Version=\"2.8.0\" />");
         }
     }
 }
