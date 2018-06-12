@@ -38,10 +38,11 @@ Task("Package")
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
 });
 
+Task("CopyPackagesToArtifacts")
+    .Does(() => CopyPackagesToArtifacts(args));
+
 Task("UploadPackage")
-.Does(() => {
-    args.UploadPackages();
-});
+    .Does(() => args.UploadPackages());
 
 Task("Default")
     .IsDependentOn("Package")
@@ -49,6 +50,7 @@ Task("Default")
 
 Task("Travis")
     .IsDependentOn("Package")
+    .IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("UploadPackage")
 ;
 
