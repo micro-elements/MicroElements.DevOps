@@ -29,7 +29,7 @@ for i in "$@"; do
     shift
 done
 
-CAKE_ARGUMENTS+=("--rootDir=\"$SCRIPT_DIR\"");
+#CAKE_ARGUMENTS+=("--rootDir=\"$SCRIPT_DIR\"");
 
 echo "===========VARIABLES============"
 echo "SCRIPT_DIR: $SCRIPT_DIR"
