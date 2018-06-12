@@ -57,8 +57,8 @@ public class ScriptArgs
 
     public void Build()
     {
-        // PrintParams();
-        Context.Information($"VERSION: {Version.VersionPrefix}");
+        // Rebuild values if needed
+        // PrintParams
     }
 
     public ScriptParamBuilder<T> Param<T>(string name)

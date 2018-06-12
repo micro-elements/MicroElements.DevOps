@@ -44,6 +44,7 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
         .WithValue(a=>a.RootDir.Value.CombineWithFilePath("README.md")).Build(args);
 
     args.Version = Versioning.ReadVersion(context, args.KnownFiles.VersionProps);
+    context.Information($"VERSION: {args.Version.VersionPrefix}");
 
     args.UseSourceLink = args.Param<bool>("UseSourceLink").DefaultValue(true).Build(args);
     args.TestSourceLink = args.Param<bool>("TestSourceLink").DefaultValue(true).Build(args);
