@@ -7,16 +7,15 @@ var target = Argument("target", "Default");
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
-#load ./scripts/init.cake
+#load ./scripts/packaging.cake
+
+ScriptArgs args = new ScriptArgs(Context, "./");
 
 Task("Info")
 .Does(() => {
     Information("MicroElements DevOps scripts.");
-    ScriptArgs args = new ScriptArgs(Context, "./");
-    FillProjectAttributes(args);
 });
 
-#load ./scripts/packaging.cake
 Task("Package")
 .Does(() => {
     var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
@@ -34,6 +33,11 @@ Task("Package")
     CopyDirectory("./templates", "./artifacts/templates");
  
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
+});
+
+Task("UploadPackage")
+.Does(() => {
+    args.UploadPackages();
 });
 
 Task("Default")
