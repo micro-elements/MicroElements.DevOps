@@ -12,6 +12,7 @@ var target = Argument("target", "Default");
 
 ScriptArgs args = new ScriptArgs(Context, "./");
 args.UseSingleComponentConventions();
+args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory("./artifacts"));
 args.Build();
 
 Task("Info")
@@ -25,15 +26,15 @@ Task("Package")
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
-        OutputDirectory = "./artifacts",
+        OutputDirectory = args.ArtifactsDir,
         BasePath = Directory("./"),
         ReleaseNotes = new string[] {releaseNotes}
     };
-    CleanDirectory("./artifacts");
+    CleanDirectory(args.ArtifactsDir);
     
-    CopyDirectory("./resources", "./artifacts/resources");
-    CopyDirectory("./scripts", "./artifacts/scripts");
-    CopyDirectory("./templates", "./artifacts/templates");
+    CopyDirectory("./resources", $"{args.ArtifactsDir}/resources");
+    CopyDirectory("./scripts", $"{args.ArtifactsDir}/scripts");
+    CopyDirectory("./templates", $"{args.ArtifactsDir}/templates");
  
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
 });
@@ -50,7 +51,7 @@ Task("Default")
 
 Task("Travis")
     .IsDependentOn("Package")
-    .IsDependentOn("CopyPackagesToArtifacts")
+    //.IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("UploadPackage")
 ;
 
