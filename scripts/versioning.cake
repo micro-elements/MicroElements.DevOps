@@ -21,6 +21,8 @@ public class VersionInfo
     public string NuGetVersion => String.IsNullOrEmpty(VersionSuffix)? $"{VersionPrefix}": $"{VersionPrefix}-{VersionSuffix}";
 
     public string InformationalVersion => $"{VersionPrefix}.{VersionSuffix}.{BranchName}.{BuildNumber}.Sha.{CommitSha}";
+
+    public string BranchNameShort => Versioning.CleanFileName(Versioning.TrimStdBranchPrefix(BranchName));
 }
 
 public class Versioning
@@ -110,13 +112,26 @@ public class Versioning
             version.BranchName = context.GetGitBranch();
             version.CommitSha = context.GetGitCommit();
 
-            context.Information($"GitBranch: {version.CommitSha}");
+            context.Information($"GitBranch: {version.BranchName}");
             context.Information($"GitCommit: {version.CommitSha}");
 
         }
 
         return version;
     }
+
+    public static string CleanFileName(string fileName, string replaceSymbol = "_")
+        => string.Join(replaceSymbol, fileName.Split(System.IO.Path.GetInvalidFileNameChars()));
+
+    public static string CleanVersionSuffix(string versionSuffix)
+        => new string(versionSuffix.Select(c=>char.IsLetterOrDigit(c)? c : '.').ToArray());
+
+    public static string TrimStdBranchPrefix(string branchName)
+        => branchName
+            .Replace("feature/", "")
+            .Replace("hotfix/", "")
+            .Replace("bugfix/", "")
+            .Replace("release/", "");
 }
 
 public static void DoVersioning(this ScriptArgs args)

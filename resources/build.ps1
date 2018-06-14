@@ -22,7 +22,10 @@ if(!$PSScriptRoot){
 
 $CAKE_VERSION = "0.28.0"
 $CAKE_BAKERY_VERSION = "0.3.0"
-$DEVOPS_VERSION = "0.5.0-rc.1"
+$DEVOPS_VERSION = "0.5.0-rc.2"
+$NUGET_URL = "https://api.nuget.org/v3/index.json"
+
+$Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
@@ -49,16 +52,16 @@ if(!(Test-Path $cake_props_path))
 }
 
 # Restore Cake
-&dotnet restore $cake_props_path --packages $TOOLS_DIR
+&dotnet restore $cake_props_path --packages $TOOLS_DIR --source @("$NUGET_URL")
 
 # Build Cake arguments
-$Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
-
 $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
-$cakeArguments += ("-rootDir="+@("$PSScriptRoot"));
+$cakeArguments += ("--rootDir="+@("$PSScriptRoot"));
+$cakeArguments += ("--devOpsVersion=$DEVOPS_VERSION");
+$cakeArguments += ("--devOpsRoot=""$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION""");
 $cakeArguments += $ScriptArgs
 
 # Start Cake

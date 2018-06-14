@@ -55,7 +55,9 @@ $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
-$cakeArguments += ("-rootDir="+@("$PSScriptRoot"));
+$cakeArguments += ("--rootDir="+@("$PSScriptRoot"));
+$cakeArguments += ("--devOpsVersion=$DEVOPS_VERSION");
+$cakeArguments += ("--devOpsRoot=""$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION""");
 $cakeArguments += $ScriptArgs
 
 # Start Cake

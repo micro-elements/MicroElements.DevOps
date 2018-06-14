@@ -551,16 +551,11 @@ public class ProcessUtils
         if(printOutput)
             context.Information($"{fileName} {args.Render()}");
         
+        var processSettings = new ProcessSettings { Arguments = args, RedirectStandardOutput = true };
+        if(workingDirectory!=null)
+            processSettings.WorkingDirectory = workingDirectory;
         IEnumerable<string> redirectedStandardOutput;
-        var exitCodeWithArgument =
-            context.StartProcess(fileName,
-                new ProcessSettings {
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    WorkingDirectory = workingDirectory
-                },
-                out redirectedStandardOutput
-            );
+        var exitCodeWithArgument = context.StartProcess(fileName, processSettings, out redirectedStandardOutput );
 
         StringBuilder outputString = new StringBuilder();
         foreach(var line in redirectedStandardOutput)
@@ -581,7 +576,7 @@ public class ProcessUtils
 /// // Temporary sets logging verbosity to Diagnostic.
 /// using(context.UseVerbosity(Verbosity.Diagnostic))
 /// {
-///     console.DotNetCoreBuild(project, settings);
+///     context.DotNetCoreBuild(project, settings);
 /// }
 /// </code>
 /// </example>
@@ -596,7 +591,7 @@ public static VerbosityChanger UseVerbosity(this ICakeContext context, Verbosity
 /// // Temporary sets logging verbosity to Diagnostic.
 /// using(context.UseDiagnosticVerbosity())
 /// {
-///     console.DotNetCoreBuild(project, settings);
+///     context.DotNetCoreBuild(project, settings);
 /// }
 /// </code>
 /// </example>
