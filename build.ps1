@@ -20,7 +20,9 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.26.1"
+$CAKE_VERSION = "0.28.0"
+$CAKE_BAKERY_VERSION = "0.3.0"
+$DEVOPS_VERSION = "0.5.0-rc.1"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
@@ -32,7 +34,8 @@ $cake_props = @"
 </PropertyGroup>
 <ItemGroup>
   <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
-  <PackageReference Include="Cake.Bakery" Version="0.2.0" />
+  <PackageReference Include="Cake.Bakery" Version="$CAKE_BAKERY_VERSION" />
+  <PackageReference Include="MicroElements.DevOps" Version="$DEVOPS_VERSION" />
 </ItemGroup>
 </Project>
 "@
