@@ -1,6 +1,6 @@
 # 0.5.0
 - Redesigned ScriptParam and ScriptArgs
-- New Targets: AddTravisFile, CopyPackagesToArtifacts, UploadPackages
+- New Targets: AddTravisFile, CopyPackagesToArtifacts, UploadPackages, AddStyleCop
 - Added versioning (Manual and for some CI)
 - Added generate package on build
 - Added build.sh to resources and AddCakeBootstrapFiles target
