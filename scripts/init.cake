@@ -266,3 +266,21 @@ public static void AddChangeLog(this ScriptArgs args)
                 .Replace("{gitHubUser}", args.GetStringParam("gitHubUser"))
                 .Replace("{gitHubProject}", args.GetStringParam("gitHubProject")));
 }
+
+public static void AddStyleCop(this ScriptArgs args)
+{
+    args.AddFileFromTemplate("stylecop.json", args.SrcDir);
+    args.AddFileFromTemplate("stylecop.props", args.SrcDir);
+    args.AddFileFromTemplate("stylecop.ruleset", args.SrcDir);
+
+    var dirBuildPropsFilePath = args.SrcDir.Value.CombineWithFilePath("Directory.Build.props");
+    var dirBuildPropsText = System.IO.File.ReadAllText(dirBuildPropsFilePath.FullPath);
+    var importStyleCop = @"<Import Project=""stylecop.props""/>";
+    if(!dirBuildPropsText.Contains(importStyleCop))
+    {
+        args.Context.Information($"Adding import to {dirBuildPropsFilePath}");
+        dirBuildPropsText = dirBuildPropsText.Replace("</Project>", $"  {importStyleCop}\r\n</Project>");
+        System.IO.File.WriteAllText(dirBuildPropsFilePath.FullPath, dirBuildPropsText);
+        args.Context.Information($"Added import {importStyleCop} to {dirBuildPropsFilePath}");
+    }
+}
