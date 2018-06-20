@@ -298,7 +298,7 @@ public class ScriptParam<T>
         return paramValue;
     }
 
-    public string Formated => IsSecret? "***" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
+    public string Formated => IsSecret? "{Secured}" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
 
     public static implicit operator T(ScriptParam<T> scriptParam) => scriptParam.Value;
 
