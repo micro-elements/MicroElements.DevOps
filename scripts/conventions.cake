@@ -8,7 +8,7 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
     args.Configuration           = args.Param<string>("Configuration").DefaultValue("Release").ValidValues("Release", "Debug").Build(args);
 
     args.upload_nuget            = args.Param<string>("upload_nuget").DefaultValue("https://api.nuget.org/v3/index.json").Build(args);
-    args.upload_nuget_api_key    = args.Param<string>("upload_nuget_api_key").DefaultValue("00000000-0000-0000-0000-000000000000").IsSecret().Build(args);
+    args.upload_nuget_api_key    = args.Param<string>("upload_nuget_api_key").IsSecret().Build(args);
     args.nuget_source1           = args.Param<string>("nuget_source1").DefaultValue("https://api.nuget.org/v3/index.json").Build(args);
     args.nuget_source2           = args.Param<string>("nuget_source2").Build(args);
     args.nuget_source3           = args.Param<string>("nuget_source3").Build(args);
