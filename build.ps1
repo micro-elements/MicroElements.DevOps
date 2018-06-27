@@ -22,7 +22,7 @@ if(!$PSScriptRoot){
 
 $CAKE_VERSION = "0.28.0"
 $CAKE_BAKERY_VERSION = "0.3.0"
-$DEVOPS_VERSION = "0.5.0-rc.1"
+$DEVOPS_VERSION = "0.5.0"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"

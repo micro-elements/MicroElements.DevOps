@@ -1,4 +1,13 @@
 #load versioning.cake
+using System.Linq;
+using System.ComponentModel;
+using System.Reflection;
+
+// todo: dependency
+// todo: auto creation
+// todo: remove versioning.cake dependency
+// todo: factory to param
+// DirectoryPath and FlePath ext
 
 /// <summary>
 /// ScriptArgs provides parameters and conventions for interscript communication.
@@ -10,34 +19,38 @@ public class ScriptArgs
 
     public VersionInfo Version {get; set;}
 
-    public ScriptParam<DirectoryPath> BuildDir;
-    public ScriptParam<DirectoryPath> SrcDir;
-    public ScriptParam<DirectoryPath> TestDir;
-    public ScriptParam<DirectoryPath> TestResultsDir;
-    public ScriptParam<DirectoryPath> ArtifactsDir;
-    public ScriptParam<DirectoryPath> ToolsDir;
-    public ScriptParam<DirectoryPath> ResourcesDir;
-    public ScriptParam<DirectoryPath> TemplatesDir;
+    [ParamName("BuildDir")]
+    public ScriptParam<DirectoryPath> BuildDir {get; set;}
+    
+    public ScriptParam<DirectoryPath> SrcDir {get; set;}
+    public ScriptParam<DirectoryPath> TestDir {get; set;}
+    public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
+    public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
+    public ScriptParam<DirectoryPath> ToolsDir {get; set;}
+    public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
+    public ScriptParam<DirectoryPath> TemplatesDir {get; set;}
 
     public class KnownFilesList
     {
-        public ScriptParam<FilePath> ChangeLog;
-        public ScriptParam<FilePath> Readme;
-        public ScriptParam<FilePath> VersionProps;
-        public ScriptParam<FilePath> SolutionFile;
+        public ScriptParam<FilePath> ChangeLog {get; set;}
+        public ScriptParam<FilePath> Readme {get; set;}
+        public ScriptParam<FilePath> VersionProps {get; set;}
+        public ScriptParam<FilePath> SolutionFile {get; set;}
     }
 
-    public KnownFilesList KnownFiles = new KnownFilesList();
+    public KnownFilesList KnownFiles {get; set;} = new KnownFilesList();
 
-    public ScriptParam<string> Target {get;set;}
-    public ScriptParam<string> Configuration {get;set;}
-    public ScriptParam<string> ProjectName {get;set;}
-    public ScriptParam<string> RuntimeName {get;set;}
-    public ScriptParam<string> upload_nuget {get;set;}
-    public ScriptParam<string> upload_nuget_api_key {get;set;}
-    public ScriptParam<string> nuget_source1 {get;set;}
-    public ScriptParam<string> nuget_source2 {get;set;}
-    public ScriptParam<string> nuget_source3 {get;set;}
+    public ScriptParam<string> Target {get; set;}
+
+    [DefaultValue("Release")]
+    public ScriptParam<string> Configuration {get; set;}
+    public ScriptParam<string> ProjectName {get; set;}
+    public ScriptParam<string> RuntimeName {get; set;}
+    public ScriptParam<string> upload_nuget {get; set;}
+    public ScriptParam<string> upload_nuget_api_key {get; set;}
+    public ScriptParam<string> nuget_source1 {get; set;}
+    public ScriptParam<string> nuget_source2 {get; set;}
+    public ScriptParam<string> nuget_source3 {get; set;}
 
     public ScriptParam<bool> UseSourceLink {get; set;} = new ScriptParam<bool>("UseSourceLink", true);
     public ScriptParam<bool> TestSourceLink {get; set;} = new ScriptParam<bool>("TestSourceLink", true);
@@ -51,8 +64,10 @@ public class ScriptArgs
     {
         Context = context;
         RootDir = Param<DirectoryPath>("RootDir")
-            .WithValue(args=>context.Directory(rootDir).Path.ToParamValue(ParamSource.CommandLine))
+            .WithValue(new ValueGetter<DirectoryPath>(args=>context.MakeAbsolute(context.Directory(rootDir)), ParamSource.CommandLine))
             .Build(this);
+        InitializeParams(context, this);
+        InitializeParams(context, KnownFiles);
     }
 
     public void Build()
@@ -65,16 +80,17 @@ public class ScriptArgs
     {
         var builder = new ScriptParamBuilder<T>(name);
         if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
-            builder.WithValue(args=>args.Context.ArgumentOrEnvVar<T>(name));
-        if(typeof(T) == typeof(DirectoryPath))
-            builder.WithValue(args=>
-            {
-                var paramValue = args.Context.ArgumentOrEnvVar<string>(name);
-                var dirPathParam = paramValue.HasValue()?
-                    args.Context.Directory(paramValue.Value).Path.ToParamValue(paramValue.Source) as ParamValue<T>
-                    : ParamValue<T>.NoValue;
-                return dirPathParam ?? ParamValue<T>.NoValue;
-            });
+            builder.WithValues(ArgumentOrEnvVar3<T>(name));
+        // todo: DirectoryPath param!!!
+        // if(typeof(T) == typeof(DirectoryPath))
+        //     builder.WithValue(args=>
+        //     {
+        //         var paramValue = args.Context.ArgumentOrEnvVarOld<string>(name);
+        //         var dirPathParam = paramValue.HasValue()?
+        //             args.Context.Directory(paramValue.Value).Path.ToParamValue(paramValue.Source) as ParamValue<T>
+        //             : ParamValue<T>.NoValue;
+        //         return dirPathParam ?? ParamValue<T>.NoValue;
+        //     });
         return builder;
     }
 
@@ -134,6 +150,41 @@ public class ScriptArgs
     }
 }
 
+public static void InitializeParams(ICakeContext context, object target)
+{
+    var properties = target.GetType().GetProperties();
+    foreach (var property in properties)
+    {
+        if(typeof(IScriptParam).IsAssignableFrom(property.PropertyType))
+        {
+            InitializeParam(context, target, property);
+        }
+    }
+}
+
+public static void InitializeParam(ICakeContext context, object target, PropertyInfo property)
+{
+    var paramNameAttr = property.GetCustomAttributes(typeof(ParamNameAttribute), true).Cast<ParamNameAttribute>().FirstOrDefault();
+    string paramName = paramNameAttr?.Name ?? property.Name;
+    Type paramType = property.PropertyType.GenericTypeArguments[0];
+
+    var value = property.GetValue(target);
+    if(value == null)
+    {
+        var scriptParamType = typeof(ScriptParam<>).MakeGenericType(paramType);
+        value = Activator.CreateInstance(scriptParamType, paramName);
+        var cakeGlobalType = typeof(ScriptArgs).DeclaringType.GetTypeInfo();
+        var initParamMethod = cakeGlobalType.DeclaredMethods.First(mi=>mi.Name==nameof(InitializeParamInternal));
+        initParamMethod.MakeGenericMethod(paramType).Invoke(null, new object[]{value, property});
+        property.SetValue(target, value);
+        context.Debug($"ScriptParam initialized: {paramName}");
+    }
+}
+
+public static void InitializeParamInternal<T>(ScriptParam<T> scriptParam, PropertyInfo property)
+{
+}
+
 /// <summary>
 /// ParamValue contains value and source of value.
 /// </summary>
@@ -170,6 +221,44 @@ public static bool HasValue<T>(this ParamValue<T> paramValue) => !paramValue.Has
 public delegate ParamValue<T> GetParam<T>(ICakeContext context, string name);
 
 /// <summary>
+/// ValueGetter is value holder and it knows about value source. Also value can be evaluated at runtime.
+/// </summary>
+/// <typeparam name="T">The type of value.</typeparam>
+public class ValueGetter<T>
+{
+    public ValueGetter(ScriptArgsPredicate<T> preCondition, GetValue<T> getValue, ParamSource paramSource)
+    {
+        GetValue = getValue.CheckNotNull(nameof(getValue));
+        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
+        PreCondition = preCondition;
+    }
+
+    public ValueGetter(ScriptArgsPredicate<T> preCondition, GetSimpleValue<T> getValue, ParamSource paramSource)
+    {
+        getValue.CheckNotNull(nameof(getValue));
+        GetValue = a => getValue(a).ToParamValue(paramSource);
+        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
+        PreCondition = preCondition;
+    }
+
+    public ValueGetter(GetSimpleValue<T> getValue, ParamSource paramSource)
+        :this(null, getValue, paramSource)
+    {
+    }
+
+    public ValueGetter(T constantValue, ParamSource paramSource)
+    {
+        constantValue.CheckNotNull(nameof(constantValue));
+        GetValue = a => constantValue.ToParamValue(paramSource);
+        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
+    }
+
+    public ScriptArgsPredicate<T> PreCondition {get;}
+    public GetValue<T> GetValue {get;}
+    public ParamSource ParamSource {get;}
+}
+
+/// <summary>
 /// GetValue delegate. Returns ParamValue.
 /// </summary>
 public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
@@ -180,11 +269,17 @@ public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
 public delegate T GetSimpleValue<T>(ScriptArgs args);
 
 /// <summary>
+/// Some predicate that indicates ScriptArgs conditions.
+/// </summary>
+public delegate bool ScriptArgsPredicate<T>(ScriptArgs args);
+
+/// <summary>
 /// Converts value to ParamValue.
 /// </summary>
-public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions) => new ParamValue<T>(value, source);
+public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions)
+    => new ParamValue<T>(value, source);
 
-public static ParamValue<T> ArgumentOrEnvVar<T>(this ICakeContext context, string name)
+public static ParamValue<T> ArgumentOrEnvVarOld<T>(this ICakeContext context, string name)
 {
     if(context.HasArgument(name))
         return new ParamValue<T>(context.Argument<T>(name, default(T)), ParamSource.CommandLine);
@@ -193,26 +288,56 @@ public static ParamValue<T> ArgumentOrEnvVar<T>(this ICakeContext context, strin
     return new ParamValue<T>(default(T), ParamSource.NoValue);
 }
 
-public ScriptParamBuilder<T> Param<T>(string name)
+public static ValueGetter<T> ArgumentOrEnvVar<T>(this ICakeContext context, string name)
 {
-    var builder = new ScriptParamBuilder<T>(name);
-    if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
-        builder.WithValue(args=>ArgumentOrEnvVar<T>(args.Context, name));
-    return builder;
+    if(context.HasArgument(name))
+        return new ValueGetter<T>(a=>a.Context.Argument<T>(name, default(T)), ParamSource.CommandLine);
+    if(context.HasEnvironmentVariable(name))
+        return new ValueGetter<T>(a=>(T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
+    return new ValueGetter<T>(default(T), ParamSource.NoValue);
 }
 
-public class ScriptParam<T> 
+public static IEnumerable<ValueGetter<T>> ArgumentOrEnvVar3<T>(string name)
 {
-    private List<GetValue<T>> _getValueChain = new List<GetValue<T>>();
+    yield return new ValueGetter<T>(
+        a=>a.Context.HasArgument(name),
+        a=>a.Context.Argument<T>(name, default(T)),
+        ParamSource.CommandLine);
+    yield return new ValueGetter<T>(
+        a=>a.Context.HasEnvironmentVariable(name),
+        a=>(T)Convert.ChangeType(a.Context.EnvironmentVariable(name), typeof(T)),
+        ParamSource.EnvironmentVariable);
+}
 
-    public ScriptParam(string name, params GetValue<T>[] getValueChain)
+// public ScriptParamBuilder<T> Param<T>(string name)
+// {
+//     var builder = new ScriptParamBuilder<T>(name);
+//     if(typeof(T) == typeof(string) || typeof(T) == typeof(bool))
+//         builder.WithValue(args=>ArgumentOrEnvVar<T>(args.Context, name));
+//     return builder;
+// }
+
+public interface IScriptParam
+{
+    string Name {get;}
+}
+
+/// <summary>
+/// Script param.
+/// </summary>
+/// <typeparam name="T">Type of the value.</typeparam>
+public class ScriptParam<T> : IScriptParam
+{
+    private List<ValueGetter<T>> _getValueChain = new List<ValueGetter<T>>();
+
+    public ScriptParam(string name, params ValueGetter<T>[] getValueChain)
     {
         Name = name;
         _getValueChain.AddRange(getValueChain.NotNull());
     }
 
     public ScriptParam(string name, T defaultValue):
-        this(name, args=>defaultValue.ToParamValue(ParamSource.DefaultValue))
+        this(name, new ValueGetter<T>(defaultValue, ParamSource.DefaultValue))
     {
         DefaultValue = defaultValue;
     }
@@ -227,6 +352,27 @@ public class ScriptParam<T>
 
     public bool Required {get; set;} = false;
     public T[] ValidValues {get; set;}
+
+    public ScriptParam<T> SetValues(IEnumerable<ValueGetter<T>> getValues)
+    {
+        getValues.CheckNotNull(nameof(getValues));
+        _getValueChain.AddRange(getValues);
+        return this;
+    }
+
+    public ScriptParam<T> SetValue(ValueGetter<T> getValue)
+    {
+        getValue.CheckNotNull(nameof(getValue));
+        _getValueChain.Add(getValue);
+        return this;
+    }
+    public ScriptParam<T> SetValue(GetSimpleValue<T> getValue, ParamSource paramSource = ParamSource.Conventions)
+    {
+        getValue.CheckNotNull(nameof(getValue));
+        _getValueChain.Add(new ValueGetter<T>(getValue, paramSource));
+        return this;
+    }
+    
     
     /// <summary>
     /// Builds Param. Evaluates value, checks rules.
@@ -239,6 +385,32 @@ public class ScriptParam<T>
 
         args.Context.Information($"PARAM: {Name}={Formated}; SOURCE: {BuildedValue.Source}");
         return this;
+    }
+
+    /// <summary>
+    /// Evaluates value.
+    /// </summary>
+    public ParamValue<T> EvaluateValue(ScriptArgs args)
+    {
+        ParamValue<T> paramValue = ParamValue<T>.NoValue;
+        foreach (var getValue in _getValueChain)
+        {
+            if(getValue.ParamSource==ParamSource.NoValue)
+                continue;
+            if(getValue.PreCondition!=null && !getValue.PreCondition(args))
+                continue;
+            paramValue = getValue.GetValue(args) ?? ParamValue<T>.NoValue;
+            if(HasValue(paramValue))
+                break;
+        }
+
+        if(HasValue(paramValue))
+            return paramValue;
+
+        if(Required)
+            throw new Exception($"Parameter {Name} is required but value is not provided.");
+
+        return paramValue;
     }
 
     public ParamValue<T> CheckRules(ParamValue<T> paramValue)
@@ -276,33 +448,20 @@ public class ScriptParam<T>
         return default(T); 
     }
 
-    /// <summary>
-    /// Evaluates value.
-    /// </summary>
-    public ParamValue<T> EvaluateValue(ScriptArgs args)
-    {
-        ParamValue<T> paramValue = ParamValue<T>.NoValue;
-        foreach (var getValue in _getValueChain)
-        {
-            paramValue = getValue(args) ?? ParamValue<T>.NoValue;
-            if(HasValue(paramValue))
-                break;
-        }
-
-        if(HasValue(paramValue))
-            return paramValue;
-
-        if(Required)
-            throw new Exception($"Parameter {Name} is required but value is not provided.");
-
-        return paramValue;
-    }
-
     public string Formated => IsSecret? "{Secured}" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
 
     public static implicit operator T(ScriptParam<T> scriptParam) => scriptParam.Value;
 
     public override string ToString() => $"{Value}";
+
+    public static T operator +(ScriptParam<T> dir, string dir2)
+    {
+        if(typeof(T)==typeof(DirectoryPath))
+        {
+            return (T)(object)((DirectoryPath)((object)dir.Value)).Combine(dir2);
+        }
+        throw new NotImplementedException();
+    }
 }
 
 public enum ParamSource
@@ -313,13 +472,33 @@ public enum ParamSource
     DefaultValue,
     Conventions
 }
+/// <summary>
+/// Describes the name of ScriptParam.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property|AttributeTargets.Field)]
+public class ParamNameAttribute : Attribute
+{
+    /// <summary>
+    /// Param name.
+    /// </summary>
+    public string Name {get;}
+
+    /// <summary>
+    /// Creates ParamNameAttribute.
+    /// </summary>
+    /// <param name="name">The name of param.</param>
+    public ParamNameAttribute(string name)
+    {
+        Name = name;
+    }
+}
 
 public class ScriptParamBuilder<T>
 {
     string _name;
     string _description;
 
-    List<GetValue<T>> _getValueChain = new List<GetValue<T>>();
+    private List<ValueGetter<T>> _getValueChain2 = new List<ValueGetter<T>>();
 
     T _defaultValue;
     T[] _validValues;
@@ -331,31 +510,36 @@ public class ScriptParamBuilder<T>
         _name = name.CheckNotNull("name");
     }
 
-    public ScriptParamBuilder<T> WithValue(GetValue<T> getValue)
-    {
-        getValue.CheckNotNull("getValue");
-        _getValueChain.Add(getValue);
-        return this;
-    }
-
     public ScriptParamBuilder<T> WithValue(GetSimpleValue<T> getSimpleValue)
     {
         getSimpleValue.CheckNotNull("getValue");
-        _getValueChain.Add(args=>getSimpleValue(args).ToParamValue(ParamSource.Conventions));
+        _getValueChain2.Add(new ValueGetter<T>(getSimpleValue, ParamSource.Conventions));
         return this;
     }
 
+    public ScriptParamBuilder<T> WithValue(ValueGetter<T> valueGetter)
+    {
+        valueGetter.CheckNotNull(nameof(valueGetter));
+        _getValueChain2.Add(valueGetter);
+        return this;
+    }
+    public ScriptParamBuilder<T> WithValues(IEnumerable<ValueGetter<T>> valueGetters)
+    {
+        valueGetters.CheckNotNull(nameof(valueGetters));
+        _getValueChain2.AddRange(valueGetters);
+        return this;
+    }
     public ScriptParamBuilder<T> WithValue(T value)
     {
         value.CheckNotNull("value");
-        _getValueChain.Add(args=>value.ToParamValue(ParamSource.Conventions));
+        _getValueChain2.Add(new ValueGetter<T>(value, ParamSource.Conventions));
         return this;
     }
 
     public ScriptParamBuilder<T> DefaultValue(T defaultValue)
     {
         _defaultValue = defaultValue;
-        _getValueChain.Add(args=>defaultValue.ToParamValue(ParamSource.DefaultValue));
+        _getValueChain2.Add(new ValueGetter<T>(defaultValue, ParamSource.DefaultValue));
         return this;
     }
 
@@ -387,12 +571,13 @@ public class ScriptParamBuilder<T>
     {
         try
         {
-            var param = new ScriptParam<T>(_name, _getValueChain.ToArray());
+            var param = new ScriptParam<T>(_name);
             param.Description = _description;
             param.DefaultValue = _defaultValue;
             param.ValidValues = _validValues;
             param.Required = _required;
             param.IsSecret = _isSecret;
+            param.SetValues(_getValueChain2);
             param.Build(args);
 
             args.SetParam(param.Name, param.Value);

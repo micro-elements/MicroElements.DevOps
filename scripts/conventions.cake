@@ -30,6 +30,7 @@ public static ScriptArgs UseSingleComponentConventions(this ScriptArgs args)
     args.KnownFiles.SolutionFile = args.Param<FilePath>("solutionFile").WithValue(a=>a.RootDir.Value.CombineWithFilePath(solutionName.Value)).Build(args);
 
     args.BuildDir = args.Param<DirectoryPath>("BuildDir").WithValue(a=>a.RootDir.Value.Combine("build").Combine(a.Configuration.Value)).Build(args);
+
     args.TestResultsDir = args.Param<DirectoryPath>("TestResultsDir").WithValue(a=>a.BuildDir.Value.Combine("test-results")).Build(args);
     args.ArtifactsDir = args.Param<DirectoryPath>("ArtifactsDir").WithValue(a=>a.BuildDir.Value.Combine("artifacts")).Build(args);
 

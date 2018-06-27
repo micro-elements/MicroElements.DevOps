@@ -12,7 +12,7 @@ var target = Argument("target", "Default");
 
 ScriptArgs args = new ScriptArgs(Context, "./");
 args.UseSingleComponentConventions();
-args.ArtifactsDir = new ScriptParam<DirectoryPath>("ArtifactsDir", Context.Directory($"{args.RootDir}/artifacts")).Build(args);
+args.ArtifactsDir.SetValue(a=>a.RootDir+"artifacts").Build(args);
 args.Build();
 
 Task("Info")
@@ -53,6 +53,10 @@ Task("Travis")
     .IsDependentOn("Package")
     //.IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("UploadPackage")
+;
+
+Task("TestDevOps")
+    .IsDependentOn("Info")
 ;
 
 RunTarget(target);
