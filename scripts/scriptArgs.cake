@@ -11,7 +11,7 @@ public class ScriptArgs
     public ScriptArgs(ICakeContext context, string rootDir = "./")
     {
         Context = context;
-        RootDir.SetValue(context.MakeAbsolute(context.Directory(rootDir)), ParamSource.CommandLine).Build(this);
+        RootDir.SetFromArgs().SetValue(context.MakeAbsolute(context.Directory(rootDir))).Build(this);
     }
 
     public VersionInfo Version {get; set;}

@@ -11,6 +11,7 @@ using System.Reflection;
 // DirectoryPath and FilePath ext
 // todo: DirectoryPath param!!!
 // todo: add resources dirs
+// todo: --devopsRoot --devopsVersion
 
 /// <summary>
 /// Converts value to ParamValue.
@@ -72,6 +73,8 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
             if(index>0 && index<segments.Length-1)
             devops_version = segments[index+1];
         }
+
+        //todo: --devopsRoot --devopsVersion
     }
 
     return devops_version;
