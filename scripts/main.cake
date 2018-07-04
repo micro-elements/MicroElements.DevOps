@@ -2,13 +2,7 @@
 // IMPORTS
 ///////////////////////////////////////////////////////////////////////////////
 
-#load common.cake
-#load init.cake
-#load building.cake
-#load testing.cake
-#load packaging.cake
-#load versioning.cake
-#load conventions.cake
+#load imports.cake
 
 Information("MicroElements DevOps scripts.");
 
@@ -17,7 +11,7 @@ Information("MicroElements DevOps scripts.");
 ///////////////////////////////////////////////////////////////////////////////
 
 ScriptArgs args = new ScriptArgs(Context);
-args.UseSingleComponentConventions();
+args.UseDefaultConventions();
 args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////

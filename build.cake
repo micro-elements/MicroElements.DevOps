@@ -1,19 +1,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 ///////////////////////////////////////////////////////////////////////////////
+#load ./scripts/imports.cake
 
-var target = Argument("target", "Default");
+ScriptArgs args = new ScriptArgs(Context, "./");
+args.UseDefaultConventions();
+args.ArtifactsDir.SetValue(a=>a.RootDir/"artifacts").Build(args);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
-#load ./scripts/packaging.cake
-#load ./scripts/conventions.cake
-
-ScriptArgs args = new ScriptArgs(Context, "./");
-args.UseSingleComponentConventions();
-args.ArtifactsDir.SetValue(a=>a.RootDir+"artifacts").Build(args);
-args.Build();
 
 Task("Info")
 .Does(() => {
@@ -59,4 +56,4 @@ Task("TestDevOps")
     .IsDependentOn("Info")
 ;
 
-RunTarget(target);
+RunTarget(args.Target);

@@ -74,6 +74,7 @@ public class DotNetUtils
         var nuspecOutputPath = settings.OutputDirectory.CombineWithFilePath(System.IO.Path.GetFileName(nugetNuspecFileName));
         var nuspecContent = System.IO.File.ReadAllText(nugetNuspecFileName);
         var releaseNotes = settings.ReleaseNotes.NotNull().FirstOrDefault() ?? "";
+        releaseNotes = $"<![CDATA[{releaseNotes}]]>";
         nuspecContent = nuspecContent
             .Replace("$releaseNotes$", releaseNotes);
         System.IO.File.WriteAllText(nuspecOutputPath.FullPath, nuspecContent);

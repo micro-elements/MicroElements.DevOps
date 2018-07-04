@@ -60,8 +60,8 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
     }
 
     context.Information("Adding common.props import...");
-    context.Information("Processing files: "+args.SrcDir + "/**/*.csproj");
-    var projectFiles = context.GetFiles(args.SrcDir + "/**/*.csproj");
+    context.Information($"Processing files: {args.SrcDir}/**/*.csproj");
+    var projectFiles = context.GetFiles($"{args.SrcDir}/**/*.csproj");
     foreach(var projectFile in projectFiles)
     {
         context.Information($"Processing file: {projectFile}");

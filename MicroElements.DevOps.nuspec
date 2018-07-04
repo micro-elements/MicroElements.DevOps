@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>MicroElements.DevOps</id>
-    <version>0.6.0-beta.1</version>
+    <version>1.0.0-beta.1</version>
     <description>DevOps scripts for CI and CD</description>
     <authors>alexey.petriashev</authors>
     <projectUrl>https://github.com/micro-elements/MicroElements.DevOps</projectUrl>

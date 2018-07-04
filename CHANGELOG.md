@@ -1,3 +1,9 @@
+# 1.0.0-beta.1
+## Breaking changes:
+- Removed ScriptParamFactory - all factory methods moved to ScriptParam for simplicity
+- AutoCreation script params with Initialize methods. Initialize creates script param, initializes param from attributes, sets default getters from arguments and from environment variables.
+- Added overriden operator ```/``` that combines ```ScriptParam<DirectoryPath>``` with string and gets combined DirectoryPath
+
 # 0.5.0
 - Redesigned ScriptParam and ScriptArgs
 - New Targets: AddTravisFile, CopyPackagesToArtifacts, UploadPackages, AddStyleCop
