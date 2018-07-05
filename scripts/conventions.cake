@@ -42,10 +42,10 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.AddParam(solutionName);
     args.KnownFiles.SolutionFile.SetValue(a=>a.RootDir.Value.CombineWithFilePath(solutionName.Value)).Build(args);
 
-    args.BuildDir.SetValue(a=>a.RootDir + "build" + a.Configuration.Value).Build(args);
+    args.BuildDir.SetValue(a=>a.RootDir/$"build/{a.Configuration}").Build(args);
 
-    args.TestResultsDir.SetValue(a=>a.BuildDir + "test-results").Build(args);
-    args.ArtifactsDir.SetValue(a=>a.BuildDir + "artifacts").Build(args);
+    args.TestResultsDir.SetValue(a=>a.BuildDir/"test-results").Build(args);
+    args.ArtifactsDir.SetValue(a=>a.BuildDir/"artifacts").Build(args);
 
     // KnownFiles
     args.KnownFiles.VersionProps
