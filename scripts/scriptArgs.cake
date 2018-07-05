@@ -105,7 +105,7 @@ public class ScriptArgs
 
     public ScriptParam<T> SetParam<T>(string name, T value)
     {
-        return GetOrCreateParam(name, value).SetValue(value);
+        return GetOrCreateParam(name, value).SetValue(value).Build(this);
     }
 
     public ScriptParam<T> AddParam<T>(ScriptParam<T> scriptParam)
