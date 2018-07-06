@@ -94,7 +94,23 @@ public static DirectoryPath GetDevopsToolDir(this ScriptArgs args)
 public static string GetTemplate(this ScriptArgs args, string fileName)
 {
     var templateFileName = args.Context.File(fileName).Path;
-    templateFileName = templateFileName.IsRelative? args.TemplatesDir.Value.CombineWithFilePath(templateFileName) : templateFileName;
+
+    if(templateFileName.IsRelative)
+    {
+        if(args.AltTemplatesDir.HasValue)
+        {
+            var altTemplateFileName = args.AltTemplatesDir.Value.CombineWithFilePath(templateFileName);
+            if(System.IO.File.Exists(altTemplateFileName.FullPath))
+                templateFileName = altTemplateFileName;
+        }
+        else
+        {
+            var fullTemplateFileName = args.TemplatesDir.Value.CombineWithFilePath(templateFileName);
+            if(System.IO.File.Exists(fullTemplateFileName.FullPath))
+                templateFileName = fullTemplateFileName;
+        }
+    }
+
     string templateText = System.IO.File.ReadAllText(templateFileName.FullPath);
     return templateText;
 }

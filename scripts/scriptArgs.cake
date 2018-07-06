@@ -29,6 +29,7 @@ public class ScriptArgs
     public ScriptParam<string> DevOpsVersion {get; set;}
     public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
     public ScriptParam<DirectoryPath> TemplatesDir {get; set;}
+    public ScriptParam<DirectoryPath> AltTemplatesDir {get; set;}
 
     public class KnownFilesList
     {
