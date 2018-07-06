@@ -9,7 +9,8 @@
             "args": [
                 "${workspaceRoot}/build.cake",
                 "--debug",
-                "--verbosity=diagnostic"
+                "--verbosity=diagnostic",
+                "--devOpsRoot=${workspaceRoot}"
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true,

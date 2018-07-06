@@ -57,24 +57,28 @@ public static IEnumerable<ValueGetter<T>> ArgumentOrEnvVar<T>(string name)
     }
 }
 
-public static string GetVersionFromCommandLineArgs(ICakeContext context)
+public static string NormalizePath(this string path) => path.ToLowerInvariant().Replace('\\', '/').TrimEnd('/');
+
+public static string GetVersionFromCommandLineArgs(ScriptArgs args)
 {
+    var context = args.Context;
     var commandLineArgs = System.Environment.GetCommandLineArgs();
-    context.Information("CommandLineArgs: "+System.String.Join(" ", commandLineArgs));
+    context.Debug("CommandLineArgs: "+System.String.Join(" ", commandLineArgs));
 
     string devops_version = "";
-    foreach(var arg in commandLineArgs.Select(a=>a.ToLower()))
+    foreach(var arg in commandLineArgs.Select(NormalizePath))
     {
-        if(arg.Contains("microelements.devops"))
+        if(arg.Contains("tools") && arg.Contains("microelements.devops"))
         {
             //C:\Projects\ProjName\tools\microelements.devops\0.2.0\scripts\main.cake
             var segments = context.File(arg).Path.Segments;
             int index = System.Array.IndexOf(segments, "microelements.devops");
             if(index>0 && index<segments.Length-1)
-            devops_version = segments[index+1];
+            {
+                devops_version = segments[index+1];
+                break;
+            }
         }
-
-        //todo: --devopsRoot --devopsVersion
     }
 
     return devops_version;
@@ -82,8 +86,8 @@ public static string GetVersionFromCommandLineArgs(ICakeContext context)
 
 public static DirectoryPath GetDevopsToolDir(this ScriptArgs args)
 {
-    var devops_version       = GetVersionFromCommandLineArgs(args.Context);
-    var devops_tool_dir      = args.ToolsDir.Value.Combine("microelements.devops").Combine(devops_version);
+    var devops_version = GetVersionFromCommandLineArgs(args);
+    var devops_tool_dir = args.ToolsDir/$"microelements.devops/{devops_version}";
     return devops_tool_dir;
 }
 

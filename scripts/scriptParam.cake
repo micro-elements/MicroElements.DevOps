@@ -17,6 +17,11 @@ public interface IScriptParam
     Type Type {get;}
 
     /// <summary>
+    /// Indicates that param has value.
+    /// </summary>
+    bool HasValue {get;}
+
+    /// <summary>
     /// Formatted string value.
     /// </summary>
     string FormattedValue {get;}
@@ -181,11 +186,11 @@ public class ScriptParam<T> : IScriptParam
             if(getValue.PreCondition!=null && !getValue.PreCondition(args))
                 continue;
             paramValue = getValue.GetValue(args) ?? ParamValue<T>.NoValue;
-            if(HasValue(paramValue))
+            if(paramValue.HasValue())
                 break;
         }
 
-        if(HasValue(paramValue))
+        if(paramValue.HasValue())
             return paramValue;
 
         if(Required)
@@ -228,6 +233,8 @@ public class ScriptParam<T> : IScriptParam
 
         return default(T); 
     }
+
+    public bool HasValue => BuildedValue.HasValue();
 
     public static implicit operator T(ScriptParam<T> scriptParam) => scriptParam.Value;
 

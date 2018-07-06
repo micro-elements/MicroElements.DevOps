@@ -12,6 +12,7 @@ Information("MicroElements DevOps scripts.");
 
 ScriptArgs args = new ScriptArgs(Context);
 args.UseDefaultConventions();
+args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS

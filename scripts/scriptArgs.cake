@@ -1,4 +1,5 @@
 #load scriptParam.cake
+using System.Collections;
 
 /// <summary>
 /// ScriptArgs provides parameters and conventions for interscript communication.
@@ -22,6 +23,10 @@ public class ScriptArgs
     public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
     public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
     public ScriptParam<DirectoryPath> ToolsDir {get; set;}
+
+    [ParamName("DevOpsRoot")]
+    public ScriptParam<DirectoryPath> DevOpsRootDir {get; set;}
+    public ScriptParam<string> DevOpsVersion {get; set;}
     public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
     public ScriptParam<DirectoryPath> TemplatesDir {get; set;}
 
@@ -57,17 +62,17 @@ public class ScriptArgs
     /// <summary>
     /// Script parameters.
     /// </summary>
-    private Dictionary<string,IScriptParam> Params = new Dictionary<string,IScriptParam>(StringComparer.InvariantCultureIgnoreCase);
+    private ScriptParamList Params = new ScriptParamList();
 
-    public void Build()
+    public ScriptArgs Build(bool buildOnlyEmptyParams=true)
     {
-        // todo: Rebuild values if needed
-        // PrintParams
-        foreach (var scriptParam in Params.Values)
+        foreach (var scriptParam in Params)
         {
-            // todo: order?
-            scriptParam.Build(this);
+            var isBuildNeeded = (buildOnlyEmptyParams && !scriptParam.HasValue) || !buildOnlyEmptyParams;
+            if(isBuildNeeded)
+                scriptParam.Build(this);
         }
+        return this;
     }
 
     public void InitializeParams(InitializeParamSettings settings)
@@ -92,7 +97,7 @@ public class ScriptArgs
     {
         foreach (var param in Params)
         {
-            Context.Information($"{param.Key}: {param.Value}");
+            Context.Information($"{param.Name}: {param.FormattedValue}");
         }
     }
 
@@ -110,8 +115,7 @@ public class ScriptArgs
 
     public ScriptParam<T> AddParam<T>(ScriptParam<T> scriptParam)
     {
-        Params.Add(scriptParam.Name, scriptParam);
-        return scriptParam;
+        return Params.AddParam(scriptParam);
     }
 
     public ScriptParam<T> AddParam<T>(string name, T value)
@@ -162,4 +166,57 @@ public class ScriptArgs
     {
         return $"{GetParam(name).FormattedValue}";
     }
+}
+
+/// <summary>
+/// Looks like ordered list with search by name.
+/// </summary>
+public class ScriptParamList : IEnumerable<IScriptParam>
+{
+    private List<IScriptParam> _params = new List<IScriptParam>();
+    public IEnumerator<IScriptParam> GetEnumerator() => _params.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<IScriptParam>)_params).GetEnumerator();
+
+    public IReadOnlyCollection<string> Keys => _params.Select(p=>p.Name).ToList();
+
+    public ScriptParam<T> AddParam<T>(ScriptParam<T> scriptParam)
+    {
+        _params.Add(scriptParam);
+        return scriptParam;
+    }
+
+    public bool TryGetValue(string name, out IScriptParam scriptParam)
+    {
+        var index = GetIndex(name);
+        if(index>=0)
+        {
+            scriptParam = _params[index];
+            return true;
+        }
+
+        scriptParam = null;
+        return false;
+    }
+
+    public IScriptParam this[string name]
+    {
+        get
+        {
+            var index = GetIndex(name);
+            if(index>=0)
+                return _params[index];
+            throw new Exception($"No param {name} exists!");
+        }
+        set
+        {
+            var index = GetIndex(name);
+            if(index>=0)
+                _params[index] = value;
+            else
+                _params.Add(value);
+        }
+    }
+
+    private int GetIndex(string name)
+        => _params.FindIndex(sp=>string.Equals(sp.Name, name, StringComparison.InvariantCultureIgnoreCase));
 }

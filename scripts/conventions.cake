@@ -35,8 +35,10 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.TestDir.SetValue(a=>a.RootDir/"test").Build(args);
     args.ToolsDir.SetValue(a=>a.RootDir/"tools").Build(args);
 
-    args.ResourcesDir.SetValue(a=>GetDevopsToolDir(a).Combine("resources")).Build(args);
-    args.TemplatesDir.SetValue(a=>GetDevopsToolDir(a).Combine("templates")).Build(args);
+    args.DevOpsRootDir.SetValue(GetDevopsToolDir).Build(args);
+    args.DevOpsVersion.SetValue(GetVersionFromCommandLineArgs).Build(args);
+    args.ResourcesDir.SetValue(a=>a.DevOpsRootDir/"resources").Build(args);
+    args.TemplatesDir.SetValue(a=>a.DevOpsRootDir/"templates").Build(args);
 
     var solutionName = new ScriptParam<string>("solutionName").SetFromArgs().SetValue(a=>$"{a.ProjectName}.sln").SetDefaultValue($"{args.ProjectName.Value}.sln").Build(args);
     args.AddParam(solutionName);
