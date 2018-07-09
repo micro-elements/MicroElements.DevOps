@@ -15,6 +15,12 @@ public class ScriptArgs
         RootDir.SetFromArgs().SetValue(context.MakeAbsolute(context.Directory(rootDir))).Build(this);
     }
 
+    public ScriptParam<string> Target {get; set;}
+
+    [DefaultValue("Release")]
+    [Description("The configuration of build. Common values are: Release and Debug.")]
+    public ScriptParam<string> Configuration {get; set;}
+
     public VersionInfo Version {get; set;}
 
     public ScriptParam<DirectoryPath> BuildDir {get; set;}
@@ -24,7 +30,7 @@ public class ScriptArgs
     public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
     public ScriptParam<DirectoryPath> ToolsDir {get; set;}
 
-    [ParamName("DevOpsRoot")]
+    [ScriptParam(Name="DevOpsRoot")]
     public ScriptParam<DirectoryPath> DevOpsRootDir {get; set;}
     public ScriptParam<string> DevOpsVersion {get; set;}
     public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
@@ -41,15 +47,13 @@ public class ScriptArgs
 
     public KnownFilesList KnownFiles {get; set;} = new KnownFilesList();
 
-    public ScriptParam<string> Target {get; set;}
-
-    [DefaultValue("Release")]
-    [Description("The configuration of build. Common values are: Release and Debug.")]
-    public ScriptParam<string> Configuration {get; set;}
     public ScriptParam<string> ProjectName {get; set;}
     public ScriptParam<string> RuntimeName {get; set;}
     public ScriptParam<string> upload_nuget {get; set;}
     public ScriptParam<string> upload_nuget_api_key {get; set;}
+
+    [ScriptParam(IsList=true)]
+    public ScriptParam<string> NugetSource {get; set;}
     public ScriptParam<string> nuget_source1 {get; set;}
     public ScriptParam<string> nuget_source2 {get; set;}
     public ScriptParam<string> nuget_source3 {get; set;}
@@ -59,6 +63,23 @@ public class ScriptArgs
 
     [DefaultValue(true)]
     public ScriptParam<bool> TestSourceLink {get; set;}
+
+    //Should section
+
+    [DefaultValue(true)]
+    public ScriptParam<bool> RunTests {get; set;}
+
+    [DefaultValue(true)]
+    public ScriptParam<bool> RunCodeCoverage {get; set;}
+
+    /// <summary>
+    /// Determine whether to upload packages.
+    /// </summary>
+    [DefaultValue(true)]
+    public ScriptParam<bool> UploadPackages {get; set;}
+
+    [DefaultValue(false)]
+    public ScriptParam<bool> ForceUploadPackages {get; set;}
 
     /// <summary>
     /// Script parameters.

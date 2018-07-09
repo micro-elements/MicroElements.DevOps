@@ -20,6 +20,7 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.upload_nuget.SetDefaultValue("https://api.nuget.org/v3/index.json").Build(args);
     args.upload_nuget_api_key.SetIsSecret().Build(args);
 
+    args.NugetSource.AddValue(a=>"https://api.nuget.org/v3/index.json").Build(args);
     args.nuget_source1.SetDefaultValue("https://api.nuget.org/v3/index.json").Build(args);
     args.nuget_source2.Build(args);
     args.nuget_source3.Build(args);

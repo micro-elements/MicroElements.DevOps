@@ -4,7 +4,10 @@
 // TEST METHODS
 //////////////////////////////////////////////////////////////////////
 
-public static void Test(this ScriptArgs args)
+/// <summary>
+/// Runs dotnet test for each project in test directory.
+/// </summary>
+public static void RunTests(this ScriptArgs args)
 {
     var context = args.Context;
 

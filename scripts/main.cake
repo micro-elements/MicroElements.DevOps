@@ -57,13 +57,15 @@ Task("Build")
     .Does(() => Build(args));
 
 Task("Test")
-    .Does(() => Test(args));
+    .WithCriteria(()=>args.RunTests)
+    .Does(() => RunTests(args));
 
 Task("CopyPackagesToArtifacts")
     .IsDependentOn("Build")
     .Does(() => CopyPackagesToArtifacts(args));
 
 Task("UploadPackages")
+    .WithCriteria(()=>args.UploadPackages)
     .WithCriteria(args.Version.IsRelease)
     .Does(() => UploadPackages(args));
 

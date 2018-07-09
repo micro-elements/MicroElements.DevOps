@@ -5,19 +5,19 @@ using System.ComponentModel;
 using System.Reflection;
 
 // todo: dependency
-// todo: auto creation
+// done: auto creation
 // todo: remove versioning.cake dependency
-// todo: factory to param
+// done: factory to param
 // DirectoryPath and FilePath ext
-// todo: DirectoryPath param!!!
-// todo: add resources dirs
-// todo: --devopsRoot --devopsVersion
+// done: DirectoryPath param!!!
+// done: add resources dirs
+// done: --devopsRoot --devopsVersion
 
 /// <summary>
 /// Converts value to ParamValue.
 /// </summary>
 public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions)
-    => new ParamValue<T>(value, source);
+    => !Equals(value, default(T)) ? new ParamValue<T>(value, source) : ParamValue<T>.NoValue;
 
 public static Type CakeGlobalType() => typeof(ScriptArgs).DeclaringType.GetTypeInfo();
 
@@ -28,33 +28,6 @@ public static ParamValue<T> ArgumentOrEnvVar<T>(this ICakeContext context, strin
     if(context.HasEnvironmentVariable(name))
         return new ParamValue<T>((T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
     return new ParamValue<T>(default(T), ParamSource.NoValue);
-}
-
-public static IEnumerable<ValueGetter<T>> ArgumentOrEnvVar<T>(string name)
-{
-    if(typeof(T)==typeof(string) || typeof(T)==typeof(bool))
-    {
-        yield return new ValueGetter<T>(
-            a=>a.Context.HasArgument(name),
-            a=>a.Context.Argument<T>(name, default(T)),
-            ParamSource.CommandLine);
-        yield return new ValueGetter<T>(
-            a=>a.Context.HasEnvironmentVariable(name),
-            a=>(T)Convert.ChangeType(a.Context.EnvironmentVariable(name), typeof(T)),
-            ParamSource.EnvironmentVariable);
-    }
-    if(typeof(T)==typeof(DirectoryPath))
-    {
-        object ToDirPath(string input) => new DirectoryPath(input);
-        yield return new ValueGetter<T>(
-            a=>a.Context.HasArgument(name),
-            a=>(T)ToDirPath(a.Context.Argument<string>(name, null)),
-            ParamSource.CommandLine);
-        yield return new ValueGetter<T>(
-            a=>a.Context.HasEnvironmentVariable(name),
-            a=>(T)ToDirPath(a.Context.EnvironmentVariable(name)),
-            ParamSource.EnvironmentVariable);
-    }
 }
 
 public static string NormalizePath(this string path) => path.ToLowerInvariant().Replace('\\', '/').TrimEnd('/');
@@ -184,6 +157,10 @@ public static IEnumerable<T> NotNull<T>(this IEnumerable<T> collection) => colle
 public static ICollection<T> NotNull<T>(this ICollection<T> collection) => collection ?? Array.Empty<T>();
 
 public static T[] NotNull<T>(this T[] collection) => collection ?? Array.Empty<T>();
+
+public static IEnumerable<T> AsEnumerable<T>(this T value) => new T[]{value};
+
+public static IEnumerable<T2> AsEnumerable<T,T2>(this T value) => (IEnumerable<T2>)(object)(new T[]{value});
 
 public class ProcessUtils
 {

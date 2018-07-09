@@ -27,6 +27,11 @@ public interface IScriptParam
     string FormattedValue {get;}
 
     /// <summary>
+    /// Script param is required.
+    /// </summary>
+    bool Required {get;}
+
+    /// <summary>
     /// Builds value.
     /// </summary>
     /// <param name="args">ScriptArgs.</param>
@@ -39,6 +44,9 @@ public interface IScriptParam
 /// <typeparam name="T">Type of the value.</typeparam>
 public class ScriptParam<T> : IScriptParam
 {
+    private readonly List<ParamValue<T>> _buildedValues = new List<ParamValue<T>>();
+    private readonly List<ValueGetter<T>> _getValueChain = new List<ValueGetter<T>>();
+
     /// <summary>
     /// Creates new instance of ScriptParam.
     /// </summary>
@@ -47,7 +55,7 @@ public class ScriptParam<T> : IScriptParam
     public ScriptParam(string name, params ValueGetter<T>[] getValueChain)
     {
         Name = name;
-        GetValueChain.AddRange(getValueChain.NotNull());
+        _getValueChain.AddRange(getValueChain.NotNull());
     }
 
     /// <summary>
@@ -58,13 +66,7 @@ public class ScriptParam<T> : IScriptParam
     public ScriptParam(string name, T defaultValue):
         this(name, new ValueGetter<T>(defaultValue, ParamSource.DefaultValue))
     {
-        DefaultValue = defaultValue;
     }
-
-    /// <summary>
-    /// GetValue chain.
-    /// </summary>
-    private List<ValueGetter<T>> GetValueChain {get;} = new List<ValueGetter<T>>();
 
     /// <summary>
     /// The name of script param.
@@ -86,10 +88,17 @@ public class ScriptParam<T> : IScriptParam
     /// </summary>
     public bool IsSecret {get; set;} = false;
 
-    public ParamValue<T> BuildedValue {get;private set;} = ParamValue<T>.NoValue;
-    public T Value { get { return GetBuildedValue(); } }
-    public T DefaultValue {get; set;}
+    /// <summary>
+    /// Determines that param is list of values.
+    /// </summary>
+    public bool IsList {get; set;} = false;
+
+    public ParamValue<T> BuildedValue => _buildedValues.FirstOrDefault() ?? ParamValue<T>.NoValue;
+    public T Value => GetBuildedValue();
+    public T[] Values => _buildedValues.Select(v=>v.Value).ToArray();
     public string FormattedValue => IsSecret? "{Secured}" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
+    public T GetValue(ScriptArgs args) => Build(args).Value;
+    public T[] GetValues(ScriptArgs args) => Build(args).Values;
 
     public bool Required {get; set;} = false;
     public T[] ValidValues {get; set;}
@@ -98,15 +107,16 @@ public class ScriptParam<T> : IScriptParam
     {
         getValue.CheckNotNull(nameof(getValue));
    
-        var existed = GetValueChain.FirstOrDefault(gv=>gv.ParamSource==getValue.ParamSource);
+        var existed = _getValueChain.FirstOrDefault(gv=>gv.ParamSource==getValue.ParamSource);
         if(replaceSameSource && existed!=null)
         {
-            var index = GetValueChain.IndexOf(existed);
-            GetValueChain[index] = getValue;
+            var index = _getValueChain.IndexOf(existed);
+            _getValueChain[index] = getValue;
+            // todo: place default value at the end of chain
         }
         else
         {
-            GetValueChain.Add(getValue);
+            _getValueChain.Add(getValue);
         }
         return this;
     }
@@ -130,13 +140,22 @@ public class ScriptParam<T> : IScriptParam
         return this;
     }
 
+    public ScriptParam<T> ClearValue()
+    {
+        _getValueChain.Clear();
+        _buildedValues.Clear();
+        return this;
+    }
+
+    public ScriptParam<T> AddValue(GetSimpleValue<T> getValue) => SetValue(getValue, replaceSameSource: false);
+
     public ScriptParam<T> SetDefaultValue(T constValue) => SetValue(constValue, ParamSource.DefaultValue);
 
     public ScriptParam<T> SetDefaultValue(GetSimpleValue<T> getValue) => SetValue(getValue, ParamSource.DefaultValue);
 
     public ScriptParam<T> SetFromArgs()
     {
-        SetValues(ArgumentOrEnvVar<T>(this.Name));
+        SetValues(ArgumentOrEnvVar());
         return this;
     }
 
@@ -165,56 +184,106 @@ public class ScriptParam<T> : IScriptParam
     /// </summary>
     public ScriptParam<T> Build(ScriptArgs args)
     {
-        var paramValue = EvaluateValue(args);
-        paramValue = CheckRules(paramValue);
-        BuildedValue = paramValue;
+        var values = EvaluateValues(args);
+        values = CheckRules(values);
+
+        _buildedValues.Clear();
+        _buildedValues.AddRange(values);
 
         args.Context.Information($"PARAM: {Name}={FormattedValue}; SOURCE: {BuildedValue.Source}");
         return this;
     }
 
     /// <summary>
-    /// Evaluates value.
+    /// Evaluates value(s).
     /// </summary>
-    public ParamValue<T> EvaluateValue(ScriptArgs args)
+    public IReadOnlyList<ParamValue<T>> EvaluateValues(ScriptArgs args)
     {
-        ParamValue<T> paramValue = ParamValue<T>.NoValue;
-        foreach (var getValue in GetValueChain)
+        List<ParamValue<T>> values = new List<ParamValue<T>>();
+
+        foreach (var getValue in _getValueChain)
         {
             if(getValue.ParamSource==ParamSource.NoValue)
                 continue;
             if(getValue.PreCondition!=null && !getValue.PreCondition(args))
                 continue;
-            paramValue = getValue.GetValue(args) ?? ParamValue<T>.NoValue;
-            if(paramValue.HasValue())
-                break;
+
+            if(IsList)
+            {
+                var paramValues = getValue.GetValues(args).Where(val=>val.HasValue()).ToList();
+                values.AddRange(paramValues);
+            }
+            else
+            {
+                var paramValue = getValue.GetValue(args) ?? ParamValue<T>.NoValue;
+                if(paramValue.HasValue())
+                {
+                    values.Add(paramValue);
+                    break;
+                }
+            }
         }
 
-        if(paramValue.HasValue())
-            return paramValue;
+        if(Required && values.Count==0)
+            throw new Exception($"Parameter {Name} is required but value was not provided.");
 
-        if(Required)
-            throw new Exception($"Parameter {Name} is required but value is not provided.");
-
-        return paramValue;
+        return values;
     }
 
-    public ParamValue<T> CheckRules(ParamValue<T> paramValue)
+    public IReadOnlyList<ParamValue<T>> CheckRules(IReadOnlyList<ParamValue<T>> values)
     {
-        if(paramValue==default(ParamValue<T>))
-            throw new Exception($"Parameter {Name} is null.");
-
-        if(Required && !paramValue.HasValue())
-            throw new Exception($"Parameter {Name} is required but value is not provided.");
+        if(Required && values.Count==0)
+            throw new Exception($"Parameter {Name} is required but value was not provided.");
 
         var comparer = EqualityComparer<T>.Default;
-        if(ValidValues!=null && !ValidValues.Contains(paramValue.Value, comparer) && !comparer.Equals(paramValue.Value, default(T)))
+        foreach (var paramValue in values)
         {
-            var errorMessage = $"Value '{paramValue.Value}' is not allowed. Use one of: {string.Join(",", ValidValues)}";
-            throw new Exception(errorMessage);
+            if(ValidValues!=null && !ValidValues.Contains(paramValue.Value, comparer) && !comparer.Equals(paramValue.Value, default(T)))
+            {
+                var errorMessage = $"Value '{paramValue.Value}' is not allowed. Use one of: {string.Join(",", ValidValues)}";
+                throw new Exception(errorMessage);
+            }
         }
 
-        return paramValue;
+        return values;
+    }
+
+    public IEnumerable<ValueGetter<T>> ArgumentOrEnvVar()
+    {
+        var name = Name;
+        ConvertFunc<T> convert = null; 
+
+        if(!IsList)
+        {
+            if(typeof(T)==typeof(DirectoryPath))
+                convert = input=>(IEnumerable<T>)new DirectoryPath(input).AsEnumerable();
+            else if(typeof(T)==typeof(FilePath))
+                convert = input=>(IEnumerable<T>)new FilePath(input).AsEnumerable();
+            else if(typeof(T)==typeof(string))
+                convert = input=>(IEnumerable<T>)input.AsEnumerable();
+            else
+                convert = input=>(IEnumerable<T>)((T)Convert.ChangeType(input, typeof(T))).AsEnumerable();
+        }
+        else
+        {
+            if(typeof(T)==typeof(string))
+                convert = input=>(IEnumerable<T>)(object)input.Split(',').ToArray();
+        }
+
+        if(convert!=null)
+        {
+            yield return new ValueGetter<T>(
+                a=>a.Context.HasArgument(name),
+                a=>a.Context.Argument<string>(name),
+                convert,
+                ParamSource.CommandLine);
+
+            yield return new ValueGetter<T>(
+                a=>a.Context.HasEnvironmentVariable(name),
+                a=>a.Context.EnvironmentVariable(name),
+                convert,
+                ParamSource.EnvironmentVariable);
+        }
     }
 
     /// <summary>
@@ -320,6 +389,7 @@ public enum ParamSource
 /// GetValue delegate. Returns ParamValue.
 /// </summary>
 public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
+public delegate IEnumerable<ParamValue<T>> GetValues<T>(ScriptArgs args);
 
 /// <summary>
 /// Simplified GetValue. Translates to ParamValue with ParamSource.Conventions
@@ -329,7 +399,9 @@ public delegate T GetSimpleValue<T>(ScriptArgs args);
 /// <summary>
 /// Some predicate that indicates ScriptArgs conditions.
 /// </summary>
-public delegate bool ScriptArgsPredicate<T>(ScriptArgs args);
+public delegate bool ScriptArgsPredicate(ScriptArgs args);
+
+public delegate IEnumerable<T> ConvertFunc<T>(string value);
 
 /// <summary>
 /// ValueGetter is value holder and it knows about value source. Also value can be evaluated at runtime.
@@ -337,17 +409,20 @@ public delegate bool ScriptArgsPredicate<T>(ScriptArgs args);
 /// <typeparam name="T">The type of value.</typeparam>
 public class ValueGetter<T>
 {
-    public ValueGetter(ScriptArgsPredicate<T> preCondition, GetValue<T> getValue, ParamSource paramSource)
+    public ValueGetter(ScriptArgsPredicate preCondition, GetValue<T> getValue, ParamSource paramSource)
     {
-        GetValue = getValue.CheckNotNull(nameof(getValue));
+        getValue.CheckNotNull(nameof(getValue));
+        GetValue = getValue;
+        GetValues = a => getValue(a).AsEnumerable();
         ParamSource = paramSource.CheckNotNull(nameof(paramSource));
         PreCondition = preCondition;
     }
 
-    public ValueGetter(ScriptArgsPredicate<T> preCondition, GetSimpleValue<T> getValue, ParamSource paramSource)
+    public ValueGetter(ScriptArgsPredicate preCondition, GetSimpleValue<T> getValue, ParamSource paramSource)
     {
         getValue.CheckNotNull(nameof(getValue));
         GetValue = a => getValue(a).ToParamValue(paramSource);
+        GetValues = a => getValue(a).ToParamValue(paramSource).AsEnumerable();
         ParamSource = paramSource.CheckNotNull(nameof(paramSource));
         PreCondition = preCondition;
     }
@@ -361,11 +436,24 @@ public class ValueGetter<T>
     {
         constantValue.CheckNotNull(nameof(constantValue));
         GetValue = a => constantValue.ToParamValue(paramSource);
+        GetValues = a => constantValue.ToParamValue(paramSource).AsEnumerable();
         ParamSource = paramSource.CheckNotNull(nameof(paramSource));
     }
 
-    public ScriptArgsPredicate<T> PreCondition {get;}
+    public ValueGetter(ScriptArgsPredicate preCondition, GetSimpleValue<string> getValue, ConvertFunc<T> convert, ParamSource paramSource)
+    {
+        getValue.CheckNotNull(nameof(getValue));
+        convert.CheckNotNull(nameof(convert));
+
+        PreCondition = preCondition;
+        GetValue = a => convert(getValue(a)).FirstOrDefault().ToParamValue(paramSource);
+        GetValues = a => convert(getValue(a)).Select(value=>value.ToParamValue(paramSource));
+        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
+    }
+
+    public ScriptArgsPredicate PreCondition {get;}
     public GetValue<T> GetValue {get;}
+    public GetValues<T> GetValues {get;}
     public ParamSource ParamSource {get;}
 }
 
@@ -388,24 +476,20 @@ public static ScriptParam<T> ShouldHaveValue<T>(this ScriptParam<T> param)
 }
 
 /// <summary>
-/// Describes the name of ScriptParam.
+/// Describes ScriptParam.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property|AttributeTargets.Field)]
-public class ParamNameAttribute : Attribute
+public class ScriptParamAttribute : Attribute
 {
     /// <summary>
-    /// Param name.
+    /// Param name. Overrides property name.
     /// </summary>
-    public string Name {get;}
+    public string Name {get; set;}
 
     /// <summary>
-    /// Creates ParamNameAttribute.
+    /// Param value is list.
     /// </summary>
-    /// <param name="name">The name of param.</param>
-    public ParamNameAttribute(string name)
-    {
-        Name = name;
-    }
+    public bool IsList {get; set;} = false;
 }
 
 /// <summary>
@@ -473,8 +557,9 @@ public static class Initializer
         property.CheckNotNull(nameof(property));
         settings = settings ?? new InitializeParamSettings();
 
-        var paramNameAttr = property.GetCustomAttribute<ParamNameAttribute>();
-        string paramName = paramNameAttr?.Name ?? property.Name;
+        var scriptParamAttr = property.GetCustomAttribute<ScriptParamAttribute>();
+
+        string paramName = scriptParamAttr?.Name ?? property.Name;
         if(!string.IsNullOrWhiteSpace(settings.NamePrefix))
             paramName = $"{settings.NamePrefix}.{paramName}";
         Type paramType = property.PropertyType.GenericTypeArguments[0];
@@ -518,9 +603,16 @@ public static class Initializer
             {
                 scriptParam.Description = descriptionAttr.Description;
             }
+
+            var scriptParamAttr = property.GetCustomAttribute<ScriptParamAttribute>();
+            if(scriptParamAttr!=null)
+            {
+                if(scriptParamAttr.IsList)
+                    scriptParam.IsList = true;
+            }
         }
 
         if(settings.InitFromArgs)
-            scriptParam.SetValues(ArgumentOrEnvVar<T>(scriptParam.Name));
+            scriptParam.SetFromArgs();
     }
 }
