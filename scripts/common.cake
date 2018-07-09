@@ -160,7 +160,7 @@ public static T[] NotNull<T>(this T[] collection) => collection ?? Array.Empty<T
 
 public static IEnumerable<T> AsEnumerable<T>(this T value) => new T[]{value};
 
-public static IEnumerable<T2> AsEnumerable<T,T2>(this T value) => (IEnumerable<T2>)(object)(new T[]{value});
+public static IEnumerable<T> AsEnumerable<T>(this object value) => (new T[]{(T)value});
 
 public class ProcessUtils
 {

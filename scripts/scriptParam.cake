@@ -93,6 +93,11 @@ public class ScriptParam<T> : IScriptParam
     /// </summary>
     public bool IsList {get; set;} = false;
 
+    /// <summary>
+    /// Uses for list params to split and merge values.
+    /// </summary>
+    public char ListDelimeter {get; set;} = ',';
+
     public ParamValue<T> BuildedValue => _buildedValues.FirstOrDefault() ?? ParamValue<T>.NoValue;
     public T Value => GetBuildedValue();
     public T[] Values => _buildedValues.Select(v=>v.Value).ToArray();
@@ -210,12 +215,12 @@ public class ScriptParam<T> : IScriptParam
 
             if(IsList)
             {
-                var paramValues = getValue.GetValues(args).Where(val=>val.HasValue()).ToList();
+                var paramValues = getValue.GetValues(args).Where(paramValue=>paramValue.HasValue()).ToList();
                 values.AddRange(paramValues);
             }
             else
             {
-                var paramValue = getValue.GetValue(args) ?? ParamValue<T>.NoValue;
+                var paramValue = getValue.GetValues(args).FirstOrDefault() ?? ParamValue<T>.NoValue;
                 if(paramValue.HasValue())
                 {
                     values.Add(paramValue);
@@ -251,39 +256,35 @@ public class ScriptParam<T> : IScriptParam
     public IEnumerable<ValueGetter<T>> ArgumentOrEnvVar()
     {
         var name = Name;
-        ConvertFunc<T> convert = null; 
+        ConvertFunc<T> convert = null;
+        Func<string, object> ConvertToValue;
+        Func<string, IEnumerable<string>> Split = input => input.Split(ListDelimeter);
 
-        if(!IsList)
-        {
-            if(typeof(T)==typeof(DirectoryPath))
-                convert = input=>(IEnumerable<T>)new DirectoryPath(input).AsEnumerable();
-            else if(typeof(T)==typeof(FilePath))
-                convert = input=>(IEnumerable<T>)new FilePath(input).AsEnumerable();
-            else if(typeof(T)==typeof(string))
-                convert = input=>(IEnumerable<T>)input.AsEnumerable();
-            else
-                convert = input=>(IEnumerable<T>)((T)Convert.ChangeType(input, typeof(T))).AsEnumerable();
-        }
+        if(typeof(T) == typeof(string))
+            ConvertToValue = input => input;
+        else if(typeof(T) == typeof(DirectoryPath))
+            ConvertToValue = input => new DirectoryPath(input);
+        else if(typeof(T) == typeof(FilePath))
+            ConvertToValue = input => new FilePath(input);
         else
-        {
-            if(typeof(T)==typeof(string))
-                convert = input=>(IEnumerable<T>)(object)input.Split(',').ToArray();
-        }
+            ConvertToValue = input => Convert.ChangeType(input, typeof(T));
 
-        if(convert!=null)
-        {
-            yield return new ValueGetter<T>(
-                a=>a.Context.HasArgument(name),
-                a=>a.Context.Argument<string>(name),
-                convert,
-                ParamSource.CommandLine);
+        if(IsList)
+            convert = input => Split(input).Select(ConvertToValue).Cast<T>();
+        else
+            convert = input => ConvertToValue(input).AsEnumerable<T>();
 
-            yield return new ValueGetter<T>(
-                a=>a.Context.HasEnvironmentVariable(name),
-                a=>a.Context.EnvironmentVariable(name),
-                convert,
-                ParamSource.EnvironmentVariable);
-        }
+        yield return new ValueGetter<T>(
+            a=>a.Context.HasArgument(name),
+            a=>a.Context.Argument<string>(name),
+            convert,
+            ParamSource.CommandLine);
+
+        yield return new ValueGetter<T>(
+            a=>a.Context.HasEnvironmentVariable(name),
+            a=>a.Context.EnvironmentVariable(name),
+            convert,
+            ParamSource.EnvironmentVariable);
     }
 
     /// <summary>
@@ -388,8 +389,12 @@ public enum ParamSource
 /// <summary>
 /// GetValue delegate. Returns ParamValue.
 /// </summary>
-public delegate ParamValue<T> GetValue<T>(ScriptArgs args);
-public delegate IEnumerable<ParamValue<T>> GetValues<T>(ScriptArgs args);
+public delegate ParamValue<T> GetParamValue<T>(ScriptArgs args);
+
+/// <summary>
+/// GetValues delegate. Returns zero, one or more ParamValues.
+/// </summary>
+public delegate IEnumerable<ParamValue<T>> GetParamValues<T>(ScriptArgs args);
 
 /// <summary>
 /// Simplified GetValue. Translates to ParamValue with ParamSource.Conventions
@@ -401,30 +406,46 @@ public delegate T GetSimpleValue<T>(ScriptArgs args);
 /// </summary>
 public delegate bool ScriptArgsPredicate(ScriptArgs args);
 
+/// <summary>
+/// Converts string value to some type.
+/// For list params it can return more than one value, for single value params it returns one value.
+/// Empty enumeration means NoValue.
+/// </summary>
 public delegate IEnumerable<T> ConvertFunc<T>(string value);
 
 /// <summary>
-/// ValueGetter is value holder and it knows about value source. Also value can be evaluated at runtime.
+/// ValueGetter is value(s) holder and it knows about value source. Value can be evaluated at runtime.
 /// </summary>
 /// <typeparam name="T">The type of value.</typeparam>
 public class ValueGetter<T>
 {
-    public ValueGetter(ScriptArgsPredicate preCondition, GetValue<T> getValue, ParamSource paramSource)
+    public ValueGetter(ScriptArgsPredicate preCondition, GetParamValues<T> getValues, ParamSource paramSource)
+    {
+        PreCondition = preCondition;
+        GetValues = getValues.CheckNotNull(nameof(getValues));
+        ParamSource = paramSource;
+    }
+
+    public ValueGetter(
+        ScriptArgsPredicate preCondition,
+        GetSimpleValue<string> getValue,
+        ConvertFunc<T> convertValue,
+        ParamSource paramSource)
     {
         getValue.CheckNotNull(nameof(getValue));
-        GetValue = getValue;
-        GetValues = a => getValue(a).AsEnumerable();
-        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
+        convertValue.CheckNotNull(nameof(convertValue));
+
         PreCondition = preCondition;
+        GetValues = a => convertValue(getValue(a)).Select(value=>value.ToParamValue(paramSource));
+        ParamSource = paramSource;
     }
 
     public ValueGetter(ScriptArgsPredicate preCondition, GetSimpleValue<T> getValue, ParamSource paramSource)
     {
         getValue.CheckNotNull(nameof(getValue));
-        GetValue = a => getValue(a).ToParamValue(paramSource);
-        GetValues = a => getValue(a).ToParamValue(paramSource).AsEnumerable();
-        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
         PreCondition = preCondition;
+        GetValues = a => getValue(a).ToParamValue(paramSource).AsEnumerable();
+        ParamSource = paramSource;
     }
 
     public ValueGetter(GetSimpleValue<T> getValue, ParamSource paramSource)
@@ -435,25 +456,12 @@ public class ValueGetter<T>
     public ValueGetter(T constantValue, ParamSource paramSource)
     {
         constantValue.CheckNotNull(nameof(constantValue));
-        GetValue = a => constantValue.ToParamValue(paramSource);
         GetValues = a => constantValue.ToParamValue(paramSource).AsEnumerable();
         ParamSource = paramSource.CheckNotNull(nameof(paramSource));
     }
 
-    public ValueGetter(ScriptArgsPredicate preCondition, GetSimpleValue<string> getValue, ConvertFunc<T> convert, ParamSource paramSource)
-    {
-        getValue.CheckNotNull(nameof(getValue));
-        convert.CheckNotNull(nameof(convert));
-
-        PreCondition = preCondition;
-        GetValue = a => convert(getValue(a)).FirstOrDefault().ToParamValue(paramSource);
-        GetValues = a => convert(getValue(a)).Select(value=>value.ToParamValue(paramSource));
-        ParamSource = paramSource.CheckNotNull(nameof(paramSource));
-    }
-
     public ScriptArgsPredicate PreCondition {get;}
-    public GetValue<T> GetValue {get;}
-    public GetValues<T> GetValues {get;}
+    public GetParamValues<T> GetValues {get;}
     public ParamSource ParamSource {get;}
 }
 

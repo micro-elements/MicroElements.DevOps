@@ -3,10 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #load ./scripts/imports.cake
 
-ScriptArgs args = new ScriptArgs(Context, "./");
+ScriptArgs args = new ScriptArgs(Context);
 args.UseDefaultConventions();
 args.ArtifactsDir.SetValue(a=>a.RootDir/"artifacts").Build(args);
-
+args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
