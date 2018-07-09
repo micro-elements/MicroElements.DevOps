@@ -96,17 +96,21 @@ public class ScriptParam<T> : IScriptParam
     /// <summary>
     /// Uses for list params to split and merge values.
     /// </summary>
-    public char ListDelimeter {get; set;} = ',';
+    public string ListDelimeter {get; set;} = ",";
 
     public ParamValue<T> BuildedValue => _buildedValues.FirstOrDefault() ?? ParamValue<T>.NoValue;
     public T Value => GetBuildedValue();
     public T[] Values => _buildedValues.Select(v=>v.Value).ToArray();
-    public string FormattedValue => IsSecret? "{Secured}" : this.BuildedValue.HasValue() ? $"{Value}" : "{NoValue}";
     public T GetValue(ScriptArgs args) => Build(args).Value;
     public T[] GetValues(ScriptArgs args) => Build(args).Values;
 
     public bool Required {get; set;} = false;
     public T[] ValidValues {get; set;}
+
+    public string FormattedValue => IsSecret? "{Secured}" : MergedValue;
+    private string MergedValue => _buildedValues.Count>0? String.Join(ListDelimeter, _buildedValues.Select(FormattedParamValue)) : NoValue;
+    private string FormattedParamValue(ParamValue<T> paramValue) => paramValue.HasValue() ? $"{paramValue.Value}" : NoValue;
+    private static string NoValue = "{NoValue}";
 
     public ScriptParam<T> SetValue(ValueGetter<T> getValue, bool replaceSameSource = true)
     {
@@ -195,7 +199,10 @@ public class ScriptParam<T> : IScriptParam
         _buildedValues.Clear();
         _buildedValues.AddRange(values);
 
-        args.Context.Information($"PARAM: {Name}={FormattedValue}; SOURCE: {BuildedValue.Source}");
+        string source = _buildedValues.Count>0? String.Join(ListDelimeter, _buildedValues.Select(pv=>pv.Source)) : NoValue;
+        string listParamPrefix = IsList ? "PARAM: LIST " : "PARAM: VALUE";
+        string listParamSuffix = IsList ? "; IsList=true" : "";
+        args.Context.Information($"{listParamPrefix}: {Name}={FormattedValue}; SOURCE: {source}");
         return this;
     }
 
@@ -258,7 +265,7 @@ public class ScriptParam<T> : IScriptParam
         var name = Name;
         ConvertFunc<T> convert = null;
         Func<string, object> ConvertToValue;
-        Func<string, IEnumerable<string>> Split = input => input.Split(ListDelimeter);
+        Func<string, IEnumerable<string>> Split = input => input.Split(ListDelimeter[0]);
 
         if(typeof(T) == typeof(string))
             ConvertToValue = input => input;
@@ -353,6 +360,8 @@ public class ParamValue<T> : IEquatable<ParamValue<T>>
         if (ReferenceEquals(this, other)) return true;
         return EqualityComparer<T>.Default.Equals(Value, other.Value) && Source == other.Source;
     }
+
+    public override string ToString() => $"Value: {Value}, Source: {Source}";
 }
 
 /// <summary>
