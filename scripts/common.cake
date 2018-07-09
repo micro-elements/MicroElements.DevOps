@@ -70,17 +70,14 @@ public static string GetTemplate(this ScriptArgs args, string fileName)
 
     if(templateFileName.IsRelative)
     {
-        if(args.AltTemplatesDir.HasValue)
+        foreach (var templateDir in args.TemplatesDir.Values)
         {
-            var altTemplateFileName = args.AltTemplatesDir.Value.CombineWithFilePath(templateFileName);
-            if(System.IO.File.Exists(altTemplateFileName.FullPath))
-                templateFileName = altTemplateFileName;
-        }
-        else
-        {
-            var fullTemplateFileName = args.TemplatesDir.Value.CombineWithFilePath(templateFileName);
+            var fullTemplateFileName = templateDir.CombineWithFilePath(templateFileName);
             if(System.IO.File.Exists(fullTemplateFileName.FullPath))
+            {
                 templateFileName = fullTemplateFileName;
+                break;
+            }
         }
     }
 

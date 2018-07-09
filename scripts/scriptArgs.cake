@@ -34,6 +34,7 @@ public class ScriptArgs
     public ScriptParam<DirectoryPath> DevOpsRootDir {get; set;}
     public ScriptParam<string> DevOpsVersion {get; set;}
     public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
+    [ScriptParam(IsList=true)]
     public ScriptParam<DirectoryPath> TemplatesDir {get; set;}
     public ScriptParam<DirectoryPath> AltTemplatesDir {get; set;}
 
