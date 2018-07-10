@@ -21,9 +21,6 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.upload_nuget_api_key.SetIsSecret().Build(args);
 
     args.NugetSource.AddValue(a=>"https://api.nuget.org/v3/index.json").Build(args);
-    args.nuget_source1.SetDefaultValue("https://api.nuget.org/v3/index.json").Build(args);
-    args.nuget_source2.Build(args);
-    args.nuget_source3.Build(args);
 
     // any, linux-x64, win-x64, rhel.7-x64 // see: https://docs.microsoft.com/ru-ru/dotnet/core/rid-catalog
     args.RuntimeName

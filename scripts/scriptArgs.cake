@@ -37,8 +37,6 @@ public class ScriptArgs
     public ScriptParam<DirectoryPath> ResourcesDir {get; set;}
     [ScriptParam(IsList=true)]
     public ScriptParam<DirectoryPath> TemplatesDir {get; set;}
-    public ScriptParam<DirectoryPath> AltTemplatesDir {get; set;}
-
     public class KnownFilesList
     {
         public ScriptParam<FilePath> ChangeLog {get; set;}
@@ -56,9 +54,6 @@ public class ScriptArgs
 
     [ScriptParam(IsList=true)]
     public ScriptParam<string> NugetSource {get; set;}
-    public ScriptParam<string> nuget_source1 {get; set;}
-    public ScriptParam<string> nuget_source2 {get; set;}
-    public ScriptParam<string> nuget_source3 {get; set;}
 
     [DefaultValue(true)]
     public ScriptParam<bool> UseSourceLink {get; set;}

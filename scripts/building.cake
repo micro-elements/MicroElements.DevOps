@@ -1,7 +1,7 @@
 #load common.cake
 
 public static string NugetSourcesArg(this ScriptArgs args) =>
-    new string[]{args.nuget_source1, args.nuget_source2, args.nuget_source3}.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
+    args.NugetSource.Values.Where(s => !string.IsNullOrEmpty(s)).Distinct().Aggregate("", (s, s1) => $@"{s} --source ""{s1}""");
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
