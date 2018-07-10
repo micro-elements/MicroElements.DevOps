@@ -1,3 +1,8 @@
+# 1.0.0-beta.2
+- VersionParam
+- used NugetSource, removed old non list nuget_sourceX params
+
+
 # 1.0.0-beta.1
 ## Breaking changes:
 - Removed ScriptParamFactory - all factory methods moved to ScriptParam for simplicity
