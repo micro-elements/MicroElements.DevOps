@@ -131,9 +131,9 @@ public class ScriptArgs
 
     public IEnumerable<string> ParamKeys => Params.Keys;
 
-    public ScriptParam<T> SetParam<T>(string name, T value)
+    public ScriptParam<T> SetParam<T>(string name, T value, ParamSource paramSource = ParamSource.Conventions)
     {
-        return GetOrCreateParam(name, value).SetValue(value).Build(this);
+        return GetOrCreateParam(name, value).SetValue(value, paramSource).Build(this);
     }
 
     public ScriptParam<T> AddParam<T>(ScriptParam<T> scriptParam)
@@ -141,9 +141,15 @@ public class ScriptArgs
         return Params.AddParam(scriptParam);
     }
 
-    public ScriptParam<T> AddParam<T>(string name, T value)
+    public ScriptParam<T> AddParam<T>(string name)
     {
-        var scriptParam = new ScriptParam<T>(name).SetValue(value);
+        var scriptParam = new ScriptParam<T>(name);
+        return AddParam(scriptParam);
+    }
+
+    public ScriptParam<T> AddParam<T>(string name, T value, ParamSource paramSource = ParamSource.Conventions)
+    {
+        var scriptParam = new ScriptParam<T>(name).SetValue(value, paramSource);
         return AddParam(scriptParam);
     }
 
