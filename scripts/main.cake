@@ -66,11 +66,11 @@ Task("CopyPackagesToArtifacts")
 
 Task("UploadPackages")
     .WithCriteria(()=>args.UploadPackages)
-    .WithCriteria(args.Version.IsRelease)
+    .WithCriteria(()=>args.Version.IsRelease)
     .Does(() => UploadPackages(args));
 
 Task("DoVersioning")
-    .WithCriteria(args.Version.IsRelease)
+    .WithCriteria(()=>args.Version.IsRelease)
     .Does(() => DoVersioning(args));
 
 Task("Init")

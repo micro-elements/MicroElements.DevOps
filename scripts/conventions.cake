@@ -60,7 +60,7 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.KnownFiles.Readme
         .SetValue(a=>a.RootDir.Value.CombineWithFilePath("README.md")).Build(args);
 
-    args.Version = Versioning.ReadVersion(context, args.KnownFiles.VersionProps);
+    args.VersionParam.SetValue(a=>Versioning.ReadVersion(a.Context, a.KnownFiles.VersionProps)).Build(args);
     context.Information($"VERSION: {args.Version.VersionPrefix}");
 
     args.UseSourceLink.SetDefaultValue(true).Build(args);

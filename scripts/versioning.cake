@@ -23,6 +23,8 @@ public class VersionInfo
     public string InformationalVersion => $"{VersionPrefix}.{VersionSuffix}.{BranchName}.{BuildNumber}.Sha.{CommitSha}";
 
     public string BranchNameShort => Versioning.CleanFileName(Versioning.TrimStdBranchPrefix(BranchName));
+
+    public override string ToString() => NuGetVersion;
 }
 
 public class Versioning

@@ -21,7 +21,8 @@ public class ScriptArgs
     [Description("The configuration of build. Common values are: Release and Debug.")]
     public ScriptParam<string> Configuration {get; set;}
 
-    public VersionInfo Version {get; set;}
+    public ScriptParam<VersionInfo> VersionParam {get; set;}
+    public VersionInfo Version => VersionParam.Value;
 
     public ScriptParam<DirectoryPath> BuildDir {get; set;}
     public ScriptParam<DirectoryPath> SrcDir {get; set;}
