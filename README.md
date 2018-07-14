@@ -1,15 +1,111 @@
 # MicroElements.DevOps
 DevOps scripts for CI and CD
 
-## Windows
-### Download bootstrap script
+## Main features
+- Based on CakeBuild
+- Supported OS: Windows, Linux
+- Supported CI: Travis, AppVeyor, Jenkins, any other
+- C# project generation or initialization with CI and CD included
+- Only two files: build.ps1 and build.sh. All other files can be generated
+- No need to maintain your own build scripts
+- You can customize and add own tasks if you need
+
+## Getting started
+### 1. Download bootstrap script
 Open a new PowerShell window and run the following command.
-```
+```ps
 Invoke-WebRequest https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/resources/build.ps1 -OutFile build.ps1
 ```
 
-### Initialize component
+### 2. Initialize component
 Run target `Init`
+```ps
+./build.ps1 -Target "Init"
 ```
-.\build.ps1 -Target "Init"
+
+### 3. Usage
+
+#### Local build
+
+Run target `Default`
+```ps
+./build.ps1 -Target "Default"
 ```
+
+#### Travis CI
+
+Add file .travis.yml to project
+```yml
+language: csharp
+mono: none
+dotnet: 2.1.300
+os:
+  - linux
+before_script:
+  - chmod a+x ./build.sh
+script:
+  - ./build.sh --target=Travis --verbosity=normal
+```
+
+#### Other CI
+Run shell script: `./build.sh --target=Travis`
+
+## Tasks
+### Init
+Initializes project structure and adds all needed files
+
+Runs:
+* [CreateProjectStructure](#CreateProjectStructure)
+* [CheckOrDownloadGitIgnore](#CheckOrDownloadGitIgnore)
+* [GitIgnoreAddCakeRule](#GitIgnoreAddCakeRule)
+* [CreateProjects](#CreateProjects)
+* [EditorConfig](#EditorConfig)
+* [SourceLink](#SourceLink)
+* [CreateCommonProjectFiles](#CreateCommonProjectFiles)
+* [AddTravisFile](#AddTravisFile)
+* [AddCakeBootstrapFiles](#AddCakeBootstrapFiles)
+* [AddChangeLog](#AddChangeLog)
+* [AddStyleCop](#AddStyleCop)
+
+### Default
+Builds projects and runs tests
+
+Runs:
+* [Build](#Build)
+* [Test](#Test)
+* [CopyPackagesToArtifacts](#CopyPackagesToArtifacts)
+
+### Travis
+Does versioning, builds projects, runs tests creates and uploads artifacts
+
+Runs:
+* [DoVersioning](#DoVersioning)
+* [Build](#Build)
+* [Test](#Test)
+* [CopyPackagesToArtifacts](#CopyPackagesToArtifacts)
+* [UploadPackages](#UploadPackages)
+
+### CreateProjectStructure
+TODO: all tasks
+
+## Features
+
+## Customize build
+add cake.build file in root of your project
+TODO: samples
+
+# Concepts
+- ScriptParam
+- ScriptArgs
+- Value chains
+- Conventions
+
+# ScriptParam
+- props
+- get value chain
+
+# ScriptArgs
+Param | Description | DefaulValue
+---|---|---
+SrcDir | Sources directory. Contains projects. | src
+TODO: all params

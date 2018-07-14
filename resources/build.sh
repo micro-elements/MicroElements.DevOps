@@ -7,7 +7,7 @@
 echo "Starting build.sh"
 
 CAKE_VERSION=0.29.0
-DEVOPS_VERSION=1.0.0-beta.1
+DEVOPS_VERSION=1.0.0
 NUGET_URL=https://api.nuget.org/v3/index.json
 
 SCRIPT="$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION/scripts/main.cake"

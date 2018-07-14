@@ -6,7 +6,10 @@ using System.Collections;
 /// </summary>
 public class ScriptArgs
 {
+    /// <summary>Represents a context for scripts and script aliases.</summary>
     public ICakeContext Context {get;}
+
+    /// <summary>Root project dir. Repo root dir.</summary>
     public ScriptParam<DirectoryPath> RootDir {get;} = new ScriptParam<DirectoryPath>("RootDir");
 
     public ScriptArgs(ICakeContext context, string rootDir = "./")
@@ -25,8 +28,13 @@ public class ScriptArgs
     public VersionInfo Version => VersionParam.Value;
 
     public ScriptParam<DirectoryPath> BuildDir {get; set;}
+    
+    /// <summary>Sources directory. Contains projects.</summary>
     public ScriptParam<DirectoryPath> SrcDir {get; set;}
+
+    /// <summary>Directory that contains test projects.</summary>
     public ScriptParam<DirectoryPath> TestDir {get; set;}
+
     public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
     public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
     public ScriptParam<DirectoryPath> ToolsDir {get; set;}

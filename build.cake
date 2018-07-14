@@ -19,13 +19,16 @@ Task("Info")
 
 Task("Package")
 .Does(() => {
+    var description = System.IO.File.ReadAllText("./README.md");
+    description = description.Substring(0, 1175);
     var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
         OutputDirectory = args.ArtifactsDir,
         BasePath = Directory("./"),
-        ReleaseNotes = new string[] {releaseNotes}
+        ReleaseNotes = new string[] {releaseNotes},
+        Description = description
     };
     CleanDirectory(args.ArtifactsDir);
     
