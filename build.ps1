@@ -20,9 +20,8 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.28.0"
+$CAKE_VERSION = "0.29.0"
 $CAKE_BAKERY_VERSION = "0.3.0"
-$DEVOPS_VERSION = "0.5.0"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
@@ -35,7 +34,6 @@ $cake_props = @"
 <ItemGroup>
   <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
   <PackageReference Include="Cake.Bakery" Version="$CAKE_BAKERY_VERSION" />
-  <PackageReference Include="MicroElements.DevOps" Version="$DEVOPS_VERSION" />
 </ItemGroup>
 </Project>
 "@
@@ -56,8 +54,6 @@ if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
 $cakeArguments += ("--rootDir="+@("$PSScriptRoot"));
-$cakeArguments += ("--devOpsVersion=$DEVOPS_VERSION");
-$cakeArguments += ("--devOpsRoot=""$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION""");
 $cakeArguments += $ScriptArgs
 
 # Start Cake

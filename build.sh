@@ -6,9 +6,7 @@
 
 echo "Starting build.sh"
 
-CAKE_VERSION=0.28.0
-CAKE_BAKERY_VERSION=0.3.0
-DEVOPS_VERSION=0.5.0-rc.1
+CAKE_VERSION=0.29.0
 NUGET_URL=https://api.nuget.org/v3/index.json
 
 # Define directories.
@@ -31,8 +29,6 @@ for i in "$@"; do
 done
 
 CAKE_ARGUMENTS+=("--rootDir=\"$SCRIPT_DIR\"");
-CAKE_ARGUMENTS+=("--devOpsVersion=$DEVOPS_VERSION");
-CAKE_ARGUMENTS+=("--devOpsRoot=\"$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION\"");
 
 echo "===========VARIABLES============"
 echo "SCRIPT_DIR: $SCRIPT_DIR"
@@ -62,8 +58,6 @@ then
 </PropertyGroup>
 <ItemGroup>
   <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
-  <PackageReference Include="Cake.Bakery" Version="$CAKE_BAKERY_VERSION" />
-  <PackageReference Include="MicroElements.DevOps" Version="$DEVOPS_VERSION" />
 </ItemGroup>
 </Project>
 EOL

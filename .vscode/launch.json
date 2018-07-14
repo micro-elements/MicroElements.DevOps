@@ -5,7 +5,7 @@
             "name": "Cake: Debug Script (CoreCLR)",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceRoot}/tools/Cake.CoreCLR/0.28.0/Cake.dll",
+            "program": "${workspaceRoot}/tools/Cake.CoreCLR/0.29.0/Cake.dll",
             "args": [
                 "${workspaceRoot}/build.cake",
                 "--debug",
