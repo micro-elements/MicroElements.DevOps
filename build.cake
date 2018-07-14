@@ -20,7 +20,8 @@ Task("Info")
 Task("Package")
 .Does(() => {
     var description = System.IO.File.ReadAllText("./README.md");
-    description = description.Substring(0, 1175);
+    //todo: here must be more clever...
+    description = description.Substring(0, description.IndexOf("## Tasks"));
     var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
     var packSettings = new NuGetPackSettings()
     {
