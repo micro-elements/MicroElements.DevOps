@@ -101,4 +101,10 @@ Task("Travis")
     .IsDependentOn("UploadPackages")
     ;
 
+Task("AppVeyor")
+    .IsDependentOn("Build")
+    .IsDependentOn("Test")
+    ;
+// TODO: https://www.appveyor.com/docs/running-tests/#uploading-xml-test-results
+
 RunTarget(args.Target);

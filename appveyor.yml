@@ -5,3 +5,5 @@ test: off
 skip_commits:
   files:    
     - '**/*.md'
+artifacts:
+- path: artifacts/*.nupkg
