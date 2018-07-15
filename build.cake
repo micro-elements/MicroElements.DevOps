@@ -56,6 +56,10 @@ Task("Travis")
     .IsDependentOn("UploadPackage")
 ;
 
+Task("AppVeyor")
+    .IsDependentOn("Package")
+;
+
 Task("TestDevOps")
     .IsDependentOn("Info")
 ;
