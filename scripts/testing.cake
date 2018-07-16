@@ -32,3 +32,18 @@ public static void RunTests(this ScriptArgs args)
         context.DotNetCoreTest(test_project.FullPath, testSettings);
     }
 }
+
+/// <summary>
+/// Uploads test results to AppVeyor.
+/// see: https://www.appveyor.com/docs/running-tests/#uploading-xml-test-results
+/// </summary>
+public static void UploadTestResultsToAppVeyor(this ScriptArgs args)
+{
+    var appVeyor = args.Context.BuildSystem().AppVeyor;
+    var testResultsMask = $"{args.TestResultsDir}/*.trx";
+    var testResults = args.Context.GetFiles(testResultsMask);
+    foreach (var testResult in testResults)
+    {
+        appVeyor.UploadTestResults(testResult, AppVeyorTestResultsType.MSTest);
+    }
+}

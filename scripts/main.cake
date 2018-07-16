@@ -60,6 +60,10 @@ Task("Test")
     .WithCriteria(()=>args.RunTests)
     .Does(() => RunTests(args));
 
+Task("UploadTestResultsToAppVeyor")
+    .WithCriteria(()=>args.RunTests)
+    .Does(() => UploadTestResultsToAppVeyor(args));
+
 Task("CopyPackagesToArtifacts")
     .IsDependentOn("Build")
     .Does(() => CopyPackagesToArtifacts(args));
@@ -104,7 +108,7 @@ Task("Travis")
 Task("AppVeyor")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
+    .IsDependentOn("UploadTestResultsToAppVeyor")
     ;
-// TODO: https://www.appveyor.com/docs/running-tests/#uploading-xml-test-results
 
 RunTarget(args.Target);

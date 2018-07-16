@@ -1,16 +1,20 @@
+# 1.1.0
+- Added task `UploadTestResultsToAppVeyor` to `AppVeyor` task
+
 # 1.0.0
 The first major version.
-- Includes main tasks: Init, Default, Travis
+- Includes main tasks: Init, Default, Travis, AppVeyor
 - Task `Init` runs: CreateProjectStructure, CheckOrDownloadGitIgnore, GitIgnoreAddCakeRule, CreateProjects, EditorConfig, SourceLink, CreateCommonProjectFile, AddTravisFile, AddCakeBootstrapFiles, AddChangeLog, AddStyleCop
 - Task `Default` runs: Build, Test, CopyPackagesToArtifacts
 - Task `Travis` runs: DoVersioning, Build, Test, CopyPackagesToArtifacts, UploadPackages
+- Task `AppVeyor` runs: Build, Test
 - All scripts builded on concepts:
     - ScriptArgs contains all script params
     - ScriptParam:
-        - Evaluates by conventions
-        - Can contain list values
         - Can be initializes from command line args, environment variables
         - Can be initialized from attributes: DefaultValue, ScriptParamAttribute
+        - Evaluates by conventions
+        - Can contain list values
 - Scripts splitted on several files
 - Extended customization
 
