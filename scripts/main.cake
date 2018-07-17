@@ -44,6 +44,9 @@ Task("CreateCommonProjectFiles")
 Task("AddTravisFile")
     .Does(() => AddTravisFile(args));
 
+Task("AddAppVeyorFile")
+    .Does(() => AddAppVeyorFile(args));
+
 Task("AddCakeBootstrapFiles")
     .Does(() => AddCakeBootstrapFiles(args));
 
@@ -86,6 +89,7 @@ Task("Init")
     .IsDependentOn("SourceLink")
     .IsDependentOn("CreateCommonProjectFiles")
     .IsDependentOn("AddTravisFile")
+    .IsDependentOn("AddAppVeyorFile")
     .IsDependentOn("AddCakeBootstrapFiles")
     .IsDependentOn("AddChangeLog")
     .IsDependentOn("AddStyleCop")

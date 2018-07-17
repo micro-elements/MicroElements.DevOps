@@ -1,5 +1,7 @@
 # 1.1.0
 - Added task `UploadTestResultsToAppVeyor` to `AppVeyor` task
+- Added task `AddAppVeyorFile`
+- New: `AddFileFromTemplate` supports options and can fill template from params
 
 # 1.0.0
 The first major version.

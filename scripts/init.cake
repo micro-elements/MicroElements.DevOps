@@ -23,7 +23,8 @@ public static void CreateProjectStructure(this ScriptArgs args)
 
 public static void AddBuildProps(this ScriptArgs args)
 {
-    args.AddFileFromTemplate("Directory.Build.props.xml", args.SrcDir, "Directory.Build.props");
+    args.AddFileFromTemplate("Directory.Build.props.xml", args.SrcDir,
+        opt => opt.SetDestinationName("Directory.Build.props"));
 }
 
 public static void AddEditorConfig(this ScriptArgs args)
@@ -252,6 +253,13 @@ public static void AddTravisFile(this ScriptArgs args)
     args.AddFileFromTemplate(".travis.yml", args.RootDir);
 }
 
+public static void AddAppVeyorFile(this ScriptArgs args)
+{
+    var artifacts = args.ArtifactsDir.Value.GetRelativePath(args.RootDir.Value).FullPath;
+    args.AddFileFromTemplate("appveyor.yml", args.RootDir,
+        opt => opt.Replace("$artifacts$", artifacts).FillFromScriptArgs());
+}
+
 public static void AddCakeBootstrapFiles(this ScriptArgs args)
 {
     args.AddFileFromResource("build.sh", args.RootDir);
@@ -260,11 +268,7 @@ public static void AddCakeBootstrapFiles(this ScriptArgs args)
 
 public static void AddChangeLog(this ScriptArgs args)
 {
-    args.AddFileFromTemplate("CHANGELOG.md", args.RootDir,
-        modifyTemplate:
-            template=>template
-                .Replace("{gitHubUser}", args.GetStringParam("gitHubUser"))
-                .Replace("{gitHubProject}", args.GetStringParam("gitHubProject")));
+    args.AddFileFromTemplate("CHANGELOG.md", args.RootDir, opt => opt.FillFromScriptArgs());
 }
 
 public static void AddStyleCop(this ScriptArgs args)

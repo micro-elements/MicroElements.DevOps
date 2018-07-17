@@ -63,6 +63,7 @@ Runs:
 * [SourceLink](#SourceLink)
 * [CreateCommonProjectFiles](#CreateCommonProjectFiles)
 * [AddTravisFile](#AddTravisFile)
+* [AddAppVeyorFile](#AddAppVeyorFile)
 * [AddCakeBootstrapFiles](#AddCakeBootstrapFiles)
 * [AddChangeLog](#AddChangeLog)
 * [AddStyleCop](#AddStyleCop)
@@ -84,6 +85,14 @@ Runs:
 * [Test](#Test)
 * [CopyPackagesToArtifacts](#CopyPackagesToArtifacts)
 * [UploadPackages](#UploadPackages)
+
+### AppVeyor
+Builds, tests and uploads test results to appVeyor
+
+Runs:
+* [Build](#Build)
+* [Test](#Test)
+* [UploadTestResultsToAppVeyor](#UploadTestResultsToAppVeyor)
 
 ### CreateProjectStructure
 TODO: all tasks

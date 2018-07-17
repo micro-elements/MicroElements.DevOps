@@ -108,26 +108,78 @@ public static void AddFileFromResource(this ScriptArgs args, string name, Direct
     }
 }
 
-public static void AddFileFromTemplate(
+public class AddFileOptions
+{
+    public string DestinationName {get; private set;}
+    public Dictionary<string, string> Replacements {get; private set;} = new Dictionary<string, string>();
+    public bool DoFillFromScriptArgs {get; private set;} = false;
+    public bool DoReplaceFileIfExists {get; private set;} = false;
+
+    public AddFileOptions SetDestinationName(string destinationName)
+    {
+        DestinationName = destinationName;
+        return this;
+    }
+    public AddFileOptions Replace(string placeholder, string replacement)
+    {
+        Replacements.Add(placeholder, replacement);
+        return this;
+    }
+    public AddFileOptions FillFromScriptArgs(bool fillFromScriptArgs = true)
+    {
+        DoFillFromScriptArgs = fillFromScriptArgs;
+        return this;
+    }
+    public AddFileOptions ReplaceFileIfExists(bool replaceFileIfExists = true)
+    {
+        DoReplaceFileIfExists = replaceFileIfExists;
+        return this;
+    }
+}
+
+public static string AddFileFromTemplate(
     this ScriptArgs args,
-    string name,
+    string templateFileName,
     DirectoryPath destinationDir,
-    string destinationName = null,
-    Func<string,string> modifyTemplate = null)
+    Func<AddFileOptions,AddFileOptions> opt)
+{
+    AddFileOptions options = new AddFileOptions();
+    options = opt(options);
+    return AddFileFromTemplate(args, templateFileName, destinationDir, options);
+}
+
+public static string AddFileFromTemplate(
+    this ScriptArgs args,
+    string templateFileName,
+    DirectoryPath destinationDir,
+    AddFileOptions options = null)
 {
     var context = args.Context;
-    var destinationFile = destinationDir.CombineWithFilePath(destinationName??name);
+    options = options ?? new AddFileOptions();
+    var destinationFile = destinationDir.CombineWithFilePath(options.DestinationName??templateFileName);
 
-    if(context.FileExists(destinationFile))
+    string content = string.Empty;
+    if(context.FileExists(destinationFile) && !options.DoReplaceFileIfExists)
         context.Information($"{destinationFile} file already exists.");
     else
     {
-        var content = args.GetTemplate($"{name}");
-        if(modifyTemplate!=null)
-            content = modifyTemplate(content);
+        content = args.GetTemplate(templateFileName);
+        if(options.Replacements.Any())
+        {
+            foreach (var replacement in options.Replacements)
+            {
+                content = content.Replace(replacement.Key, replacement.Value);
+            }
+        }
+        if(options.DoFillFromScriptArgs)
+        {
+            content = FillTags(content, args);
+        }
         System.IO.File.WriteAllText(destinationFile.FullPath, content);
         context.Information($"{destinationFile} created.");
     }
+
+    return content;
 }
 
 public static string FillTags(string inputXml, ScriptArgs args)

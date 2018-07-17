@@ -633,3 +633,9 @@ public static class Initializer
             scriptParam.SetFromArgs();
     }
 }
+
+public static T InitializeObject<T>(this T target, ScriptArgs args)
+{
+    Initializer.InitializeParams(args.Context, target);
+    return target;
+}
