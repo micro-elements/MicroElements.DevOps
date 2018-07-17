@@ -18,23 +18,26 @@ Task("Info")
 
 Task("Package")
 .Does(() => {
+    CleanDirectory(args.ArtifactsDir);
+
     var description = System.IO.File.ReadAllText("./README.md");
     //todo: here must be more clever...
     description = description.Substring(0, description.IndexOf("## Tasks"));
     var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
+    var buildDir = args.ArtifactsDir / "build";
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
         OutputDirectory = args.PackagesDir,
-        BasePath = Directory("./"),
+        BasePath = buildDir,
         ReleaseNotes = new string[] {releaseNotes},
         Description = description
     };
-    CleanDirectory(args.ArtifactsDir);
     
-    CopyDirectory("./resources", $"{args.ArtifactsDir}/resources");
-    CopyDirectory("./scripts", $"{args.ArtifactsDir}/scripts");
-    CopyDirectory("./templates", $"{args.ArtifactsDir}/templates");
+    
+    CopyDirectory("./resources", $"{buildDir}/resources");
+    CopyDirectory("./scripts", $"{buildDir}/scripts");
+    CopyDirectory("./templates", $"{buildDir}/templates");
  
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
 });
