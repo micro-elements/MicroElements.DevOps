@@ -5,7 +5,6 @@
 
 ScriptArgs args = new ScriptArgs(Context);
 args.UseDefaultConventions();
-args.ArtifactsDir.SetValue(a=>a.RootDir/"artifacts").Build(args);
 args.Build();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -26,7 +25,7 @@ Task("Package")
     var packSettings = new NuGetPackSettings()
     {
         Id = "MicroElements.DevOps",
-        OutputDirectory = args.ArtifactsDir,
+        OutputDirectory = args.PackagesDir,
         BasePath = Directory("./"),
         ReleaseNotes = new string[] {releaseNotes},
         Description = description
