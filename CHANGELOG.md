@@ -1,3 +1,6 @@
+# 1.1.1
+- Bugfix: fixed build.sh script path
+
 # 1.1.0
 - Added task `UploadTestResultsToAppVeyor` to `AppVeyor` task
 - Added task `AddAppVeyorFile`

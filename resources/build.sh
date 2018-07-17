@@ -11,12 +11,13 @@ DEVOPS_VERSION=1.1.0
 NUGET_URL=https://api.nuget.org/v3/index.json
 #NUGET_URL=https://www.myget.org/F/micro-elements/api/v3/index.json
 
-SCRIPT="$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
-
 # Define directories.
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/tools
 CAKE_DLL=$TOOLS_DIR/cake.coreclr/$CAKE_VERSION/Cake.dll
+
+# Script to run.
+SCRIPT="$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
 
 CAKE_PROPS_PATH=$TOOLS_DIR/cake.props
 CAKE_ARGUMENTS=()

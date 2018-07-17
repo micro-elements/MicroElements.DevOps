@@ -29,6 +29,8 @@ $NUGET_URL = "https://api.nuget.org/v3/index.json"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $CAKE_DLL = Join-Path $TOOLS_DIR "Cake.CoreCLR/$CAKE_VERSION/Cake.dll"
+
+# Script to run.
 $Script = Join-Path $TOOLS_DIR "microelements.devops/$DEVOPS_VERSION/scripts/main.cake"
 
 $cake_props = @"
