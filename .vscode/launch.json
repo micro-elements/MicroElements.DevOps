@@ -8,9 +8,13 @@
             "program": "${workspaceRoot}/tools/Cake.CoreCLR/0.29.0/Cake.dll",
             "args": [
                 "${workspaceRoot}/build.cake",
+                //uncomment and edit for component script debug
+                //"${workspaceRoot}/tools/microelements.devops/1.1.0/scripts/main.cake",
+                //"--devOpsRoot=${workspaceRoot}/tools/microelements.devops/1.1.0",
                 "--debug",
                 "--verbosity=diagnostic",
-                "--devOpsRoot=${workspaceRoot}"
+                "--rootDir=${workspaceRoot}",
+                "--Target=Default"
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true,
