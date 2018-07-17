@@ -18,25 +18,33 @@ public class ScriptArgs
         RootDir.SetFromArgs().SetValue(context.MakeAbsolute(context.Directory(rootDir))).Build(this);
     }
 
+    [Description("The name of task to run.")]
+    [DefaultValue("Default")]
     public ScriptParam<string> Target {get; set;}
 
-    [DefaultValue("Release")]
     [Description("The configuration of build. Common values are: Release and Debug.")]
+    [DefaultValue("Release")]
     public ScriptParam<string> Configuration {get; set;}
 
     public ScriptParam<VersionInfo> VersionParam {get; set;}
     public VersionInfo Version => VersionParam.Value;
-
-    public ScriptParam<DirectoryPath> BuildDir {get; set;}
-    
-    /// <summary>Sources directory. Contains projects.</summary>
+  
+    [Description("Sources directory. Contains projects.")]
     public ScriptParam<DirectoryPath> SrcDir {get; set;}
 
-    /// <summary>Directory that contains test projects.</summary>
+    [Description("Directory that contains test projects.")]
     public ScriptParam<DirectoryPath> TestDir {get; set;}
 
-    public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
+    [Description("Directory for storing build artifacts.")]
     public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
+
+    [Description("Directory that contains test results.")]
+    public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
+
+    [Description("Directory that contains packages.")]
+    public ScriptParam<DirectoryPath> PackagesDir {get; set;}
+
+    [Description("Tools directory to store build tools.")]
     public ScriptParam<DirectoryPath> ToolsDir {get; set;}
 
     [ScriptParam(Name="DevOpsRoot")]

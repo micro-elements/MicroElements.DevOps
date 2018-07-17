@@ -2,6 +2,9 @@
 - Added task `UploadTestResultsToAppVeyor` to `AppVeyor` task
 - Added task `AddAppVeyorFile`
 - New: `AddFileFromTemplate` supports options and can fill template from params
+- Changes: `ArtifactsDir` now is in `RootDir` by default
+- Changes: `TestResultsDir` is the child of `ArtifactsDir`
+- Changes: `PackagesDir` is the child of `ArtifactsDir`
 - Bugfix: `DefaultValue` ParamSource is now always at the and of GetValueChain
 
 # 1.0.0

@@ -96,10 +96,10 @@ public static void CopyPackagesToArtifacts(this ScriptArgs args)
 
     var fileMask = $"{args.SrcDir}/**/*.nupkg";
     var files = context.GetFiles(fileMask);
-    context.EnsureDirectoryExists(args.ArtifactsDir);
-    context.CleanDirectory(args.ArtifactsDir);
+    context.EnsureDirectoryExists(args.PackagesDir);
+    context.CleanDirectory(args.PackagesDir);
     using(context.UseDiagnosticVerbosity())
-        context.CopyFiles(files, args.ArtifactsDir);
+        context.CopyFiles(files, args.PackagesDir);
 }
 
 public static void UploadPackages(this ScriptArgs args)
@@ -111,9 +111,9 @@ public static void UploadPackages(this ScriptArgs args)
 
     context.Information("UploadPackages started.");
 
-    var packageMask = $"{args.ArtifactsDir}/*.nupkg";
+    var packageMask = $"{args.PackagesDir}/*.nupkg";
     context.DotNetCoreNuGetPush(packageMask, new DotNetCoreNuGetPushSettings(){
-        WorkingDirectory = args.ArtifactsDir,
+        WorkingDirectory = args.PackagesDir,
         Source = args.upload_nuget,
         ApiKey = args.upload_nuget_api_key,
     });
