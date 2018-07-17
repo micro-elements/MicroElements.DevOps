@@ -255,7 +255,7 @@ public static void AddTravisFile(this ScriptArgs args)
 
 public static void AddAppVeyorFile(this ScriptArgs args)
 {
-    var artifacts = args.ArtifactsDir.Value.GetRelativePath(args.RootDir.Value).FullPath;
+    var artifacts = args.RootDir.Value.GetRelativePath(args.ArtifactsDir.Value).FullPath;
     args.AddFileFromTemplate("appveyor.yml", args.RootDir,
         opt => opt.Replace("$artifacts$", artifacts).FillFromScriptArgs());
 }
