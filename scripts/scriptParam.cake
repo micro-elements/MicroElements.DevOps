@@ -121,12 +121,23 @@ public class ScriptParam<T> : IScriptParam
         {
             var index = _getValueChain.IndexOf(existed);
             _getValueChain[index] = getValue;
-            // todo: place default value at the end of chain
         }
         else
         {
             _getValueChain.Add(getValue);
         }
+
+        // place default value at the end of chain
+        var hasDefaultValue = _getValueChain.Any(gv=>gv.ParamSource==ParamSource.DefaultValue);
+        if(hasDefaultValue && _getValueChain.Last().ParamSource!=ParamSource.DefaultValue)
+        {
+            var defaultValues = _getValueChain.Where(gv=>gv.ParamSource==ParamSource.DefaultValue);
+            var values = _getValueChain.Where(gv=>gv.ParamSource!=ParamSource.DefaultValue);
+            var sorted = values.Concat(defaultValues).ToList();
+            _getValueChain.Clear();
+            _getValueChain.AddRange(sorted);
+        }
+
         return this;
     }
 
@@ -608,13 +619,7 @@ public static class Initializer
     public static void InitializeParamInternal<T>(ScriptParam<T> scriptParam, PropertyInfo property, InitializeParamSettings settings = null)
     {
         if(settings.InitFromAttributes)
-        {
-            var defaultValueAttr = property.GetCustomAttribute<DefaultValueAttribute>();
-            if(defaultValueAttr!=null)
-            {
-                scriptParam.SetDefaultValue((T)defaultValueAttr.Value);
-            }
-            
+        {        
             var descriptionAttr = property.GetCustomAttribute<DescriptionAttribute>();
             if(descriptionAttr!=null)
             {
@@ -631,6 +636,15 @@ public static class Initializer
 
         if(settings.InitFromArgs)
             scriptParam.SetFromArgs();
+
+        if(settings.InitFromAttributes)
+        {
+            var defaultValueAttr = property.GetCustomAttribute<DefaultValueAttribute>();
+            if(defaultValueAttr!=null)
+            {
+                scriptParam.SetDefaultValue((T)defaultValueAttr.Value);
+            }
+        }
     }
 }
 
