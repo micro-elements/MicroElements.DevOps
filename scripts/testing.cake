@@ -5,6 +5,17 @@
 //////////////////////////////////////////////////////////////////////
 
 /// <summary>
+/// Returns all test projects.
+/// </summary>
+public static IReadOnlyList<FilePath> GetTestProjects(this ScriptArgs args)
+{
+    var projectsMask = $"{args.TestDir}/**/*.csproj";
+    var testProjects = args.Context.GetFiles(projectsMask).ToList();
+    args.Context.Information($"TestProjectsMask: {projectsMask}, Found: {testProjects.Count} test project(s).");
+    return testProjects;
+}
+
+/// <summary>
 /// Runs dotnet test for each project in test directory.
 /// </summary>
 public static void RunTests(this ScriptArgs args)
@@ -12,13 +23,12 @@ public static void RunTests(this ScriptArgs args)
     var context = args.Context;
 
     var testResultsDirArgs = $" --results-directory {args.TestResultsDir}";
-    var projectsMask = $"{args.TestDir}/**/*.csproj";
 
-    var test_projects = context.GetFiles(projectsMask).ToList();
-    context.Information($"TestProjectsMask: {projectsMask}, Found: {test_projects.Count} test project(s).");
-    for (int testProjNum = 0; testProjNum < test_projects.Count; testProjNum++)
+    var testProjects = args.GetTestProjects();
+  
+    for (int testProjNum = 0; testProjNum < testProjects.Count; testProjNum++)
     {
-        var test_project = test_projects[testProjNum];
+        var testProject = testProjects[testProjNum];
         var logFilePath = $"test-result-{testProjNum+1}.trx";
         var loggerArgs = $" --logger trx;logfilename={logFilePath}";
         var testSettings = new DotNetCoreTestSettings()
@@ -29,7 +39,7 @@ public static void RunTests(this ScriptArgs args)
                 .Append(testResultsDirArgs)
                 .Append(loggerArgs)
         };
-        context.DotNetCoreTest(test_project.FullPath, testSettings);
+        context.DotNetCoreTest(testProject.FullPath, testSettings);
     }
 }
 

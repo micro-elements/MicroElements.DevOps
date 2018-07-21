@@ -9,3 +9,4 @@
 #load packaging.cake
 #load versioning.cake
 #load conventions.cake
+#load coverage.cake

@@ -11,6 +11,7 @@
 ScriptArgs args = new ScriptArgs(Context)
     .PrintHeader()
     .UseDefaultConventions()
+    .UseCoverlet()
     .Build();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,6 +80,9 @@ Task("DoVersioning")
     .WithCriteria(()=>args.Version.IsRelease)
     .Does(() => DoVersioning(args));
 
+Task("CodeCoverage")
+    .Does(() => RunCoverage(args));
+
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("CheckOrDownloadGitIgnore")
@@ -105,6 +109,7 @@ Task("Travis")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("CodeCoverage")
     .IsDependentOn("UploadPackages")
     ;
 
