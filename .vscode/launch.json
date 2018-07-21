@@ -14,7 +14,8 @@
                 "--debug",
                 "--verbosity=diagnostic",
                 "--rootDir=${workspaceRoot}",
-                "--Target=Default"
+                "--Target=Info",
+                "--Header=\"-+++++++-,MicroElements,DevOps,-+++++++-\""
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true,

@@ -1,5 +1,7 @@
 #load versioning.cake
 #load scriptParam.cake
+#load functional.cake
+
 using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
@@ -211,7 +213,7 @@ public static IEnumerable<T> AsEnumerable<T>(this T value) => new T[]{value};
 
 public static IEnumerable<T> AsEnumerable<T>(this object value) => (new T[]{(T)value});
 
-public class ProcessUtils
+public static class ProcessUtils
 {
     public static (int ExitCode, string Output) StartProcessAndReturnOutput(
         ICakeContext context,
@@ -270,6 +272,9 @@ public static VerbosityChanger UseVerbosity(this ICakeContext context, Verbosity
 public static VerbosityChanger UseDiagnosticVerbosity(this ICakeContext context) =>
     context.UseVerbosity(Verbosity.Diagnostic);
 
+/// <summary>
+/// Disposable VerbosityChanger. On dispose old verbosity returns. 
+/// </summary>
 public class VerbosityChanger : IDisposable
 {
     ICakeLog _log;
@@ -283,4 +288,64 @@ public class VerbosityChanger : IDisposable
     }
 
     public void Dispose() => _log.Verbosity = _oldVerbosity;
+}
+
+/// <summary>
+/// Installs tool with standard cake mechanism.
+/// </summary>
+public static void RequireTool(this ScriptArgs args, string tool)
+{
+    var scriptPath = args.Context.MakeAbsolute(args.Context.File(string.Format("./{0}.cake", Guid.NewGuid())));
+    try
+    {
+        System.IO.File.WriteAllText(scriptPath.FullPath, tool);
+
+        var arguments = new Dictionary<string, string>();
+        args.Context.CakeExecuteScript(scriptPath,
+            new CakeSettings { Arguments = arguments });
+    }
+    finally
+    {
+        if (args.Context.FileExists(scriptPath))
+        {
+            args.Context.DeleteFile(scriptPath);
+        }
+    }
+}
+
+/// <summary>
+/// Prints multiline header.
+/// Header can be overriden in list param "Header".
+/// <p><example><code>--Header="-----,YourCompany,YourProject,-----"</code></example></p>
+/// </summary>
+public static ScriptArgs PrintHeader(this ScriptArgs args, string[] headers = null)
+{
+    #addin nuget:?package=Cake.Figlet&version=1.1.0
+
+    headers = headers ?? new [] {"------------", "MicroElements", "DevOps", "------------"};
+
+    var headerParam = args.GetOrCreateParam<string>("Header")
+        .SetIsList()
+        .SetFromArgs()
+        .AddValues(headers, ParamSource.DefaultValue)
+        .Build(args);
+
+    var context = args.Context;
+    var headerValues = headerParam.Values;
+
+    Func<string, string> Figlet = (input) => context.Figlet(input);
+    Func<string, int> FigletWidth = (input) => Figlet(input).SplitLines().First().Length;
+    var maxFigletWidth = headerValues.Select(FigletWidth).Max();
+    Func<string, int> PadLen = (input) => (maxFigletWidth - input.Length)/2;
+    Func<string, string> RemoveEmptyLines = (input) => string.Join(Environment.NewLine, input.SplitLines().Where(s=>!string.IsNullOrWhiteSpace(s)));
+    Func<string, string> PadLines = (input) => string.Join(Environment.NewLine, input.SplitLines().Select(s=>s.PadLeft(s.Length+PadLen(s))));
+    var SlimFiglet = Figlet.Then(RemoveEmptyLines);
+    var PaddedFiglet = Figlet.Then(RemoveEmptyLines).Then(PadLines);
+    Action<string> PrintAct = (input) => context.Information(input);
+    Func<string, string> Print = PrintAct.ToFunc();
+
+    headerValues.ForEach(PaddedFiglet.Then(Print));
+    context.Information("");
+
+    return args;
 }

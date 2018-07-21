@@ -36,6 +36,11 @@ public interface IScriptParam
     /// </summary>
     /// <param name="args">ScriptArgs.</param>
     void Build(ScriptArgs args);
+
+    /// <summary>
+    /// Returns full information about param.
+    /// </summary>
+    string Format();
 }
 
 /// <summary>
@@ -169,6 +174,15 @@ public class ScriptParam<T> : IScriptParam
 
     public ScriptParam<T> AddValue(GetSimpleValue<T> getValue) => SetValue(getValue, replaceSameSource: false);
 
+    public ScriptParam<T> AddValue(T constValue, ParamSource paramSource = ParamSource.Conventions) => SetValue(constValue, paramSource, replaceSameSource: false);
+
+    public ScriptParam<T> AddValues(IEnumerable<T> values, ParamSource paramSource = ParamSource.Conventions)
+    {
+        values.CheckNotNull(nameof(values));
+        values.ForEach(v=>AddValue(v, paramSource));
+        return this;
+    }
+
     public ScriptParam<T> SetDefaultValue(T constValue) => SetValue(constValue, ParamSource.DefaultValue);
 
     public ScriptParam<T> SetDefaultValue(GetSimpleValue<T> getValue) => SetValue(getValue, ParamSource.DefaultValue);
@@ -191,6 +205,12 @@ public class ScriptParam<T> : IScriptParam
         return this;
     }
 
+    public ScriptParam<T> SetIsList(bool isList = true)
+    {
+        this.IsList = isList;
+        return this;
+    }
+
     /// <summary>
     /// Builds Param.
     /// </summary>
@@ -202,7 +222,7 @@ public class ScriptParam<T> : IScriptParam
     /// <summary>
     /// Builds Param. Evaluates value, checks rules.
     /// </summary>
-    public ScriptParam<T> Build(ScriptArgs args)
+    public ScriptParam<T> Build(ScriptArgs args, bool printParam = true)
     {
         var values = EvaluateValues(args);
         values = CheckRules(values);
@@ -210,11 +230,16 @@ public class ScriptParam<T> : IScriptParam
         _buildedValues.Clear();
         _buildedValues.AddRange(values);
 
+        if(printParam)
+            args.Context.Information(Format());
+        return this;
+    }
+
+    public string Format()
+    {
         string source = _buildedValues.Count>0? String.Join(ListDelimeter, _buildedValues.Select(pv=>pv.Source)) : NoValue;
         string listParamPrefix = IsList ? "PARAM: LIST " : "PARAM: VALUE";
-        string listParamSuffix = IsList ? "; IsList=true" : "";
-        args.Context.Information($"{listParamPrefix}: {Name}={FormattedValue}; SOURCE: {source}");
-        return this;
+        return $"{listParamPrefix}: {Name}={FormattedValue}; SOURCE: {source}";
     }
 
     /// <summary>
@@ -224,16 +249,20 @@ public class ScriptParam<T> : IScriptParam
     {
         List<ParamValue<T>> values = new List<ParamValue<T>>();
 
+        var prevParamSource = ParamSource.NoValue;
         foreach (var getValue in _getValueChain)
         {
             if(getValue.ParamSource==ParamSource.NoValue)
                 continue;
             if(getValue.PreCondition!=null && !getValue.PreCondition(args))
                 continue;
-
+            
             if(IsList)
             {
                 var paramValues = getValue.GetValues(args).Where(paramValue=>paramValue.HasValue()).ToList();
+                var alreadyHasValuesFromOtherSource = values.Count>0 && getValue.ParamSource!=prevParamSource;
+                if(alreadyHasValuesFromOtherSource)
+                    break;
                 values.AddRange(paramValues);
             }
             else
@@ -245,6 +274,8 @@ public class ScriptParam<T> : IScriptParam
                     break;
                 }
             }
+
+            prevParamSource = getValue.ParamSource;
         }
 
         if(Required && values.Count==0)

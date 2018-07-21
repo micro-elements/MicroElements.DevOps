@@ -3,9 +3,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #load ./scripts/imports.cake
 
-ScriptArgs args = new ScriptArgs(Context);
-args.UseDefaultConventions();
-args.Build();
+ScriptArgs args = new ScriptArgs(Context)
+    .PrintHeader()
+    .UseDefaultConventions()
+    .Build();
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
@@ -13,7 +14,7 @@ args.Build();
 
 Task("Info")
 .Does(() => {
-    Information("MicroElements DevOps scripts.");
+    args.PrintParams();
 });
 
 Task("Package")

@@ -1,3 +1,9 @@
+# 1.2.0
+- Added: `PrintHeader` for header printing using Figlet, added `Header` param.
+- Added: functional stuff
+- Fixed: Value override for list params
+- Changed: `PrintParams` prints the same info that on build
+
 # 1.1.1
 - Bugfix: fixed build.sh script path
 

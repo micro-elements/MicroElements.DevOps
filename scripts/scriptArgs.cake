@@ -132,7 +132,7 @@ public class ScriptArgs
     {
         foreach (var param in Params)
         {
-            Context.Information($"{param.Name}: {param.FormattedValue}");
+            Context.Information(param.Format());
         }
     }
 
@@ -185,6 +185,15 @@ public class ScriptArgs
     {
         if(!Params.TryGetValue(name, out var scriptParam))
             return AddParam<T>(name, value);
+        if(typeof(T)!=scriptParam.Type)
+            throw new Exception($"Param {name} has type {scriptParam.Type} but type {typeof(T)} was requested!");
+        return (ScriptParam<T>)scriptParam;
+    }
+
+    public ScriptParam<T> GetOrCreateParam<T>(string name)
+    {
+        if(!Params.TryGetValue(name, out var scriptParam))
+            return AddParam<T>(name);
         if(typeof(T)!=scriptParam.Type)
             throw new Exception($"Param {name} has type {scriptParam.Type} but type {typeof(T)} was requested!");
         return (ScriptParam<T>)scriptParam;
