@@ -15,14 +15,17 @@ public static void RunCoverage(this ScriptArgs args)
 public static ScriptArgs UseCoverlet(this ScriptArgs args)
 {
     args.CoverageTask = (a) => RunCoverlet(a);
-    //coverlet.msbuild
-
+    //needs <PackageReference Include="coverlet.msbuild" Version="2.1.1" PrivateAssets="All" /> 
     return args;
 }
 
 public static void RunCoverlet(this ScriptArgs args)
 {
-    var testSettings = new DotNetCoreTestSettings {
+    var testSettings = new DotNetCoreTestSettings()
+    {
+        Configuration = args.Configuration,
+        ArgumentCustomization = arg => arg
+            .Append("/p:DebugType=portable")
     };
 
     var coveletSettings = new CoverletSettings {

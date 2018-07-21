@@ -34,7 +34,6 @@ public static void RunTests(this ScriptArgs args)
         var testSettings = new DotNetCoreTestSettings()
         {
             Configuration = args.Configuration,
-            //NoBuild = true,
             ArgumentCustomization = arg => arg
                 .Append(testResultsDirArgs)
                 .Append(loggerArgs)

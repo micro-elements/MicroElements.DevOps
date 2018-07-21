@@ -32,8 +32,11 @@ Task("GitIgnoreAddCakeRule")
 Task("CreateProjects")
     .Does(() => CreateProjects(args));
 
-Task("SourceLink")
+Task("AddBuildProps")
     .Does(() => AddBuildProps(args));
+
+Task("AddBuildPropsForTests")
+    .Does(() => AddBuildPropsForTests(args));
 
 Task("EditorConfig")
     .Does(() => AddEditorConfig(args));
@@ -89,7 +92,8 @@ Task("Init")
     .IsDependentOn("GitIgnoreAddCakeRule")
     .IsDependentOn("CreateProjects")
     .IsDependentOn("EditorConfig")
-    .IsDependentOn("SourceLink")
+    .IsDependentOn("AddBuildProps")
+    .IsDependentOn("AddBuildPropsForTests")  
     .IsDependentOn("CreateCommonProjectFiles")
     .IsDependentOn("AddTravisFile")
     .IsDependentOn("AddAppVeyorFile")
@@ -100,15 +104,15 @@ Task("Init")
 
 Task("Default")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("Test")
     ;
 
 Task("Travis")
     .IsDependentOn("DoVersioning")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("Test")
     .IsDependentOn("CodeCoverage")
     .IsDependentOn("UploadPackages")
     ;

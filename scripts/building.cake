@@ -11,6 +11,9 @@ public static void Build(ScriptArgs args)
 {
     var context = args.Context;
 
+    // Delete old packages
+    context.DeleteFiles($"{args.SrcDir}/**/*.nupkg");
+
     var nugetSourcesArg = args.NugetSourcesArg();
     var sourceLinkArgs = args.UseSourceLink? "/p:SourceLinkCreate=true" : "/p:SourceLinkCreate=false";
 
@@ -30,9 +33,6 @@ public static void Build(ScriptArgs args)
     {
         context.Information($"Building project: {project}");
         
-        // Delete old packages
-        context.DeleteFiles($"{args.SrcDir}/**/*.nupkg");
-
         // Build project
         using(context.UseDiagnosticVerbosity())
         {

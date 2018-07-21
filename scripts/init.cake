@@ -27,6 +27,12 @@ public static void AddBuildProps(this ScriptArgs args)
         opt => opt.SetDestinationName("Directory.Build.props"));
 }
 
+public static void AddBuildPropsForTests(this ScriptArgs args)
+{
+    args.AddFileFromTemplate("Directory.Build.props.Tests.xml", args.TestDir,
+        opt => opt.SetDestinationName("Directory.Build.props"));
+}
+
 public static void AddEditorConfig(this ScriptArgs args)
 {
     args.AddFileFromResource(".editorconfig", args.RootDir);
