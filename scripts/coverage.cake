@@ -1,7 +1,7 @@
 #load imports.cake
 #addin nuget:?package=Cake.Coverlet
 #addin nuget:?package=Cake.Coveralls
-#tool nuget:?package=coveralls.net
+#tool nuget:?package=coveralls.net&version=0.7.0
 
 public static void RunCoverage(this ScriptArgs args)
 {
