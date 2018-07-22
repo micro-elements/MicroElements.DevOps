@@ -229,6 +229,20 @@ public static void CreateProjects(this ScriptArgs args)
         // dotnet new test project
         context.DotNetCoreTool(testProjectDir.FullPath, "new", 
             new ProcessArgumentBuilder().Append("xunit").Append($"--output {projectName}.Tests") );
+
+        // dotnet add app/app.csproj reference lib/lib.csproj
+        context.StartProcess("dotnet", new ProcessSettings()
+            .UseWorkingDirectory(args.RootDir)
+            .WithArguments(arguments=>arguments.Append($"add {testProjectDir}/{projectName}.Tests.csproj reference {projectDir}/{projectName}.csproj")));
+    }
+
+    bool addSampleCode = true;
+    if(addSampleCode)
+    {
+        context.DeleteFiles($"{projectDir}/*.cs");
+        context.DeleteFiles($"{testProjectDir}/*.cs");
+        args.AddFileFromTemplate("Calculator.cs", projectDir, opt => opt.FillFromScriptArgs());
+        args.AddFileFromTemplate("CalculatorTests.cs", testProjectDir, opt => opt.FillFromScriptArgs());
     }
 
     if(!context.FileExists(solutionFile))
