@@ -86,7 +86,8 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 
         args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls", new ProcessArgumentBuilder()
             .Append("--opencover")
-            .Append($"--repoToken ").AppendSecret(coverallsRepoToken),
+            .Append("--repoToken ").AppendSecret(coverallsRepoToken)
+            .Append($"--input {file.FullPath}"),
             printOutput: true);
     }   
 }
