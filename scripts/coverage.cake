@@ -1,7 +1,7 @@
 #load imports.cake
 #addin nuget:?package=Cake.Coverlet
-#addin nuget:?package=Cake.Coveralls
-#tool nuget:?package=coveralls.net&version=0.7.0
+//#addin nuget:?package=Cake.Coveralls
+//#tool nuget:?package=coveralls.net&version=0.7.0
 
 public static void RunCoverage(this ScriptArgs args)
 {
@@ -46,12 +46,29 @@ public static void RunCoverlet(this ScriptArgs args)
     }   
 }
 
+public static void DotNetToolInstall(this ScriptArgs args, string toolName, string version)
+{
+    args.Context.StartProcessAndReturnOutput("dotnet", new ProcessArgumentBuilder()
+            .Append($"tool install {toolName}")
+            .Append($"--version {version}")
+            .Append($"--tool-path \"{args.ToolsDir}\""), printOutput: true
+            );
+    //csmacnz.Coveralls.exe
+    //args.Context.Tools.RegisterFile()
+}
+
 public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 {
     var coverallsRepoToken = args.GetOrCreateParam<string>("COVERALLS_REPO_TOKEN")
         .SetIsSecret()
         .SetFromArgs()
         .Build(args);
+
+    //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
+    args.DotNetToolInstall("coveralls.net", "1.0.0");
+
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
+        new ProcessArgumentBuilder().Append("--version"), printOutput: true);
 
     if(!coverallsRepoToken.HasValue)
     {
@@ -60,16 +77,16 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
         return;
     }
 
-    CoverallsNetSettings settings = new CoverallsNetSettings {
-        RepoToken = coverallsRepoToken
-    };        
-
     var fileMask = $"{args.CoverageResultsDir}/*opencover.xml";
     var files = args.Context.GetFiles(fileMask).ToList();
 
     foreach(var file in files)
     {
         args.Context.Information($"Uploading report {file} to Coveralls.io" );
-        args.Context.CoverallsNet(file, CoverallsNetReportType.OpenCover, settings);
+
+        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls", new ProcessArgumentBuilder()
+            .Append("--opencover")
+            .Append($"--repoToken ").AppendSecret(coverallsRepoToken),
+            printOutput: true);
     }   
 }

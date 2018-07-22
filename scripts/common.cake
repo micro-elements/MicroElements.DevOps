@@ -250,6 +250,32 @@ public static class ProcessUtils
     }
 }
 
+public static (int ExitCode, string Output) StartProcessAndReturnOutput(
+    this ICakeContext context,
+    FilePath fileName,
+    ProcessArgumentBuilder args,
+    string workingDirectory = null,
+    bool printOutput = false)
+{
+    if(printOutput)
+        context.Information($"{fileName} {args.RenderSafe()}");
+    
+    var processSettings = new ProcessSettings { Arguments = args, RedirectStandardOutput = true };
+    if(workingDirectory!=null)
+        processSettings.WorkingDirectory = workingDirectory;
+    IEnumerable<string> redirectedStandardOutput;
+    var exitCodeWithArgument = context.StartProcess(fileName, processSettings, out redirectedStandardOutput);
+
+    StringBuilder outputString = new StringBuilder();
+    foreach(var line in redirectedStandardOutput)
+    {
+        if(printOutput)
+            context.Information(line);
+        outputString.AppendLine(line);
+    }
+    return (exitCodeWithArgument, outputString.ToString());
+}
+
 /// <summary>
 /// Temporary sets logging verbosity.
 /// </summary>
