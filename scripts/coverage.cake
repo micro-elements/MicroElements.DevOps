@@ -48,11 +48,28 @@ public static void RunCoverlet(this ScriptArgs args)
 
 public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 {
+    var coverallsRepoToken = args.GetOrCreateParam<string>("COVERALLS_REPO_TOKEN")
+        .SetIsSecret()
+        .SetFromArgs()
+        .Build(args);
+
+    if(!coverallsRepoToken.HasValue)
+    {
+        args.Context.Warning($"To upload coverage to coveralls.io you need to provide parameter COVERALLS_REPO_TOKEN");
+        args.Context.Information("Upload coverage cancelled!");
+        return;
+    }
+
+    CoverallsNetSettings settings = new CoverallsNetSettings {
+        RepoToken = coverallsRepoToken
+    };        
+
     var fileMask = $"{args.CoverageResultsDir}/*opencover.xml";
     var files = args.Context.GetFiles(fileMask).ToList();
+
     foreach(var file in files)
     {
         args.Context.Information($"Uploading report {file} to Coveralls.io" );
-        args.Context.CoverallsNet(file, CoverallsNetReportType.OpenCover);
+        args.Context.CoverallsNet(file, CoverallsNetReportType.OpenCover, settings);
     }   
 }

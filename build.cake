@@ -60,6 +60,7 @@ Task("Travis")
 ;
 
 Task("AppVeyor")
+    .IsDependentOn("DoVersioning")
     .IsDependentOn("Package")
 ;
 

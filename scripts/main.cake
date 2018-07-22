@@ -80,7 +80,6 @@ Task("UploadPackages")
     .Does(() => UploadPackages(args));
 
 Task("DoVersioning")
-    .WithCriteria(()=>args.Version.IsRelease)
     .Does(() => DoVersioning(args));
 
 Task("CodeCoverage")
