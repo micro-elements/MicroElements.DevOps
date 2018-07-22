@@ -375,10 +375,12 @@ public static ScriptArgs PrintHeader(this ScriptArgs args, string[] headers = nu
     Func<string, string> PadLines = (input) => string.Join(Environment.NewLine, input.SplitLines().Select(s=>s.PadLeft(s.Length+PadLen(s))));
     var SlimFiglet = Figlet.Then(RemoveEmptyLines);
     var PaddedFiglet = Figlet.Then(RemoveEmptyLines).Then(PadLines);
-    Action<string> PrintAct = (input) => context.Information(input);
+    Action<string> PrintAct = (input) => Console.WriteLine(input);
     Func<string, string> Print = PrintAct.ToFunc();
 
+    Console.ForegroundColor = ConsoleColor.Green;
     headerValues.ForEach(PaddedFiglet.Then(Print));
+    Console.ResetColor();
     context.Information("");
 
     return args;
