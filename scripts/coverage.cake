@@ -67,7 +67,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
     //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
     args.DotNetToolInstall("coveralls.net", "1.0.0");
 
-    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
         new ProcessArgumentBuilder().Append("--version"), printOutput: true);
 
     if(!coverallsRepoToken.HasValue)
@@ -84,7 +84,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
     {
         args.Context.Information($"Uploading report {file} to Coveralls.io" );
 
-        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls", new ProcessArgumentBuilder()
+        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls", new ProcessArgumentBuilder()
             .Append("--opencover")
             .Append("--repoToken ").AppendSecret(coverallsRepoToken)
             .Append($"--input {file.FullPath}"),
