@@ -71,6 +71,7 @@ public static string GetTemplate(this ScriptArgs args, string fileName)
 {
     var templateFileName = args.Context.File(fileName).Path;
 
+    bool found = false;
     if(templateFileName.IsRelative)
     {
         foreach (var templateDir in args.TemplatesDir.Values)
@@ -79,9 +80,15 @@ public static string GetTemplate(this ScriptArgs args, string fileName)
             if(System.IO.File.Exists(fullTemplateFileName.FullPath))
             {
                 templateFileName = fullTemplateFileName;
+                found = true;
                 break;
             }
         }
+    }
+
+    if(!found)
+    {
+        throw new Exception($"Template {fileName} not found in Template dirs: {args.TemplatesDir.FormattedValue}");
     }
 
     string templateText = System.IO.File.ReadAllText(templateFileName.FullPath);

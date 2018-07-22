@@ -53,6 +53,7 @@ public static void UploadTestResultsToAppVeyor(this ScriptArgs args)
     var testResults = args.Context.GetFiles(testResultsMask);
     foreach (var testResult in testResults)
     {
+        args.Context.Information($"Uploading test result {testResult} to AppVeyor");
         appVeyor.UploadTestResults(testResult, AppVeyorTestResultsType.MSTest);
     }
 }
