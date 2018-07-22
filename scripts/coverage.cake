@@ -1,5 +1,7 @@
 #load imports.cake
 #addin nuget:?package=Cake.Coverlet
+#addin nuget:?package=Cake.Coveralls
+#tool nuget:?package=coveralls.net
 
 public static void RunCoverage(this ScriptArgs args)
 {
@@ -28,17 +30,29 @@ public static void RunCoverlet(this ScriptArgs args)
             .Append("/p:DebugType=portable")
     };
 
-    var coveletSettings = new CoverletSettings {
-        CollectCoverage = args.RunCodeCoverage,
-        CoverletOutputFormat = CoverletOutputFormat.opencover,
-        CoverletOutputDirectory = args.CoverageResultsDir,
-        CoverletOutputName = $"results-{DateTime.UtcNow:dd-MM-yyyy-HH-mm-ss-FFF}"
-    };
-
     var testProjects = args.GetTestProjects();
     for (int testProjNum = 0; testProjNum < testProjects.Count; testProjNum++)
     {
         var testProject = testProjects[testProjNum];
+
+        var coveletSettings = new CoverletSettings {
+            CollectCoverage = args.RunCodeCoverage,
+            CoverletOutputFormat = CoverletOutputFormat.opencover,
+            CoverletOutputDirectory = args.CoverageResultsDir,
+            CoverletOutputName = $"coverage-result-{testProjNum+1}"
+        };
+
         args.Context.DotNetCoreTest(testProject.FullPath, testSettings, coveletSettings);
+    }   
+}
+
+public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
+{
+    var fileMask = $"{args.CoverageResultsDir}/*opencover.xml";
+    var files = args.Context.GetFiles(fileMask).ToList();
+    foreach(var file in files)
+    {
+        args.Context.Information($"Uploading report {file} to Coveralls.io" );
+        args.Context.CoverallsNet(file, CoverallsNetReportType.OpenCover);
     }   
 }

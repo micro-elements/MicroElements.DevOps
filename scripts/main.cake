@@ -86,6 +86,9 @@ Task("DoVersioning")
 Task("CodeCoverage")
     .Does(() => RunCoverage(args));
 
+Task("UploadCoverageReportsToCoveralls")
+    .Does(() => UploadCoverageReportsToCoveralls(args));
+
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
     .IsDependentOn("CheckOrDownloadGitIgnore")
@@ -114,6 +117,7 @@ Task("Travis")
     .IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("Test")
     .IsDependentOn("CodeCoverage")
+    .IsDependentOn("UploadCoverageReportsToCoveralls")
     .IsDependentOn("UploadPackages")
     ;
 
