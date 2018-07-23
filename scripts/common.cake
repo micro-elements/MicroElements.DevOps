@@ -3,6 +3,7 @@
 #load functional.cake
 
 using System.Linq;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 
@@ -70,6 +71,7 @@ public static string GetTemplate(this ScriptArgs args, string fileName)
 {
     var templateFileName = args.Context.File(fileName).Path;
 
+    bool found = false;
     if(templateFileName.IsRelative)
     {
         foreach (var templateDir in args.TemplatesDir.Values)
@@ -78,9 +80,15 @@ public static string GetTemplate(this ScriptArgs args, string fileName)
             if(System.IO.File.Exists(fullTemplateFileName.FullPath))
             {
                 templateFileName = fullTemplateFileName;
+                found = true;
                 break;
             }
         }
+    }
+
+    if(!found)
+    {
+        throw new Exception($"Template {fileName} not found in Template dirs: {args.TemplatesDir.FormattedValue}");
     }
 
     string templateText = System.IO.File.ReadAllText(templateFileName.FullPath);
@@ -242,6 +250,32 @@ public static class ProcessUtils
     }
 }
 
+public static (int ExitCode, string Output) StartProcessAndReturnOutput(
+    this ICakeContext context,
+    FilePath fileName,
+    ProcessArgumentBuilder args,
+    string workingDirectory = null,
+    bool printOutput = false)
+{
+    if(printOutput)
+        context.Information($"{fileName} {args.RenderSafe()}");
+    
+    var processSettings = new ProcessSettings { Arguments = args, RedirectStandardOutput = true };
+    if(workingDirectory!=null)
+        processSettings.WorkingDirectory = workingDirectory;
+    IEnumerable<string> redirectedStandardOutput;
+    var exitCodeWithArgument = context.StartProcess(fileName, processSettings, out redirectedStandardOutput);
+
+    StringBuilder outputString = new StringBuilder();
+    foreach(var line in redirectedStandardOutput)
+    {
+        if(printOutput)
+            context.Information(line);
+        outputString.AppendLine(line);
+    }
+    return (exitCodeWithArgument, outputString.ToString());
+}
+
 /// <summary>
 /// Temporary sets logging verbosity.
 /// </summary>
@@ -341,10 +375,12 @@ public static ScriptArgs PrintHeader(this ScriptArgs args, string[] headers = nu
     Func<string, string> PadLines = (input) => string.Join(Environment.NewLine, input.SplitLines().Select(s=>s.PadLeft(s.Length+PadLen(s))));
     var SlimFiglet = Figlet.Then(RemoveEmptyLines);
     var PaddedFiglet = Figlet.Then(RemoveEmptyLines).Then(PadLines);
-    Action<string> PrintAct = (input) => context.Information(input);
+    Action<string> PrintAct = (input) => Console.WriteLine(input);
     Func<string, string> Print = PrintAct.ToFunc();
 
+    Console.ForegroundColor = ConsoleColor.Green;
     headerValues.ForEach(PaddedFiglet.Then(Print));
+    Console.ResetColor();
     context.Information("");
 
     return args;

@@ -1,3 +1,12 @@
+# 1.3.0
+- Added: `CodeCoverage` task
+- Added: Coverlet CodeCoverage. see `UseCoverlet`
+- Added: Task `UploadCoverageReportsToCoveralls` to upload coverage results to coveralls.io
+- Added: ScriptParam `COVERALLS_REPO_TOKEN` to target caveralls.io project
+- Added: `CodeCoverage` and `UploadCoverageReportsToCoveralls` added to `Travis` task
+- Added: Directory.Build.props for Tests
+- Changed: `CopyPackagesToArtifacts` placed after `Build` task because `Test` and `CodeCoverage` can build projects with other build parameters
+
 # 1.2.0
 - Added: `PrintHeader` for header printing using Figlet, added `Header` param.
 - Added: functional stuff

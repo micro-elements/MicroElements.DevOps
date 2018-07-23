@@ -41,6 +41,9 @@ public class ScriptArgs
     [Description("Directory that contains test results.")]
     public ScriptParam<DirectoryPath> TestResultsDir {get; set;}
 
+    [Description("Directory that contains code coverage results.")]
+    public ScriptParam<DirectoryPath> CoverageResultsDir {get; set;}
+
     [Description("Directory that contains packages.")]
     public ScriptParam<DirectoryPath> PackagesDir {get; set;}
 
@@ -84,6 +87,8 @@ public class ScriptArgs
 
     [DefaultValue(true)]
     public ScriptParam<bool> RunCodeCoverage {get; set;}
+
+    public Action<ScriptArgs> CoverageTask {get; set;}
 
     /// <summary>
     /// Determine whether to upload packages.

@@ -7,9 +7,9 @@
 echo "Starting build.sh"
 
 CAKE_VERSION=0.29.0
-DEVOPS_VERSION=1.2.0
+DEVOPS_VERSION=1.3.0
 NUGET_URL=https://api.nuget.org/v3/index.json
-#NUGET_URL=https://www.myget.org/F/micro-elements/api/v3/index.json
+NUGET_BETA_URL=https://www.myget.org/F/micro-elements/api/v3/index.json
 
 # Define directories.
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -73,7 +73,7 @@ EOL
 fi
 
 # Restore Cake
-dotnet restore $CAKE_PROPS_PATH --packages $TOOLS_DIR --source "$NUGET_URL"
+dotnet restore $CAKE_PROPS_PATH --packages $TOOLS_DIR --source "$NUGET_URL" --source "$NUGET_BETA_URL"
 
 # Start Cake
 echo "Running build script..."

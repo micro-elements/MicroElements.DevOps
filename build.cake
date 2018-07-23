@@ -43,6 +43,9 @@ Task("Package")
     DotNetUtils.DotNetNuspecPack(Context, "MicroElements.DevOps.nuspec", packSettings);
 });
 
+Task("DoVersioning")
+    .Does(() => DoVersioning(args));
+
 Task("CopyPackagesToArtifacts")
     .Does(() => CopyPackagesToArtifacts(args));
 
@@ -60,6 +63,7 @@ Task("Travis")
 ;
 
 Task("AppVeyor")
+    .IsDependentOn("DoVersioning")
     .IsDependentOn("Package")
 ;
 

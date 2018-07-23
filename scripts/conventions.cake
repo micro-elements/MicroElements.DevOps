@@ -45,6 +45,7 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     args.ArtifactsDir.SetValue(a=>a.RootDir/"artifacts").Build(args);
     args.TestResultsDir.SetValue(a=>a.ArtifactsDir/"test-results").Build(args);
     args.PackagesDir.SetValue(a=>a.ArtifactsDir/"packages").Build(args);
+    args.CoverageResultsDir.SetValue(a=>a.ArtifactsDir/"coverage-results").Build(args);
 
     // KnownFiles
     args.KnownFiles.VersionProps

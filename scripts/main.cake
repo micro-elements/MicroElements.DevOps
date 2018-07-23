@@ -11,6 +11,7 @@
 ScriptArgs args = new ScriptArgs(Context)
     .PrintHeader()
     .UseDefaultConventions()
+    .UseCoverlet()
     .Build();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,8 +32,11 @@ Task("GitIgnoreAddCakeRule")
 Task("CreateProjects")
     .Does(() => CreateProjects(args));
 
-Task("SourceLink")
+Task("AddBuildProps")
     .Does(() => AddBuildProps(args));
+
+Task("AddBuildPropsForTests")
+    .Does(() => AddBuildPropsForTests(args));
 
 Task("EditorConfig")
     .Does(() => AddEditorConfig(args));
@@ -76,8 +80,13 @@ Task("UploadPackages")
     .Does(() => UploadPackages(args));
 
 Task("DoVersioning")
-    .WithCriteria(()=>args.Version.IsRelease)
     .Does(() => DoVersioning(args));
+
+Task("CodeCoverage")
+    .Does(() => RunCoverage(args));
+
+Task("UploadCoverageReportsToCoveralls")
+    .Does(() => UploadCoverageReportsToCoveralls(args));
 
 Task("Init")
     .IsDependentOn("CreateProjectStructure")
@@ -85,7 +94,8 @@ Task("Init")
     .IsDependentOn("GitIgnoreAddCakeRule")
     .IsDependentOn("CreateProjects")
     .IsDependentOn("EditorConfig")
-    .IsDependentOn("SourceLink")
+    .IsDependentOn("AddBuildProps")
+    .IsDependentOn("AddBuildPropsForTests")  
     .IsDependentOn("CreateCommonProjectFiles")
     .IsDependentOn("AddTravisFile")
     .IsDependentOn("AddAppVeyorFile")
@@ -96,20 +106,23 @@ Task("Init")
 
 Task("Default")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("Test")
     ;
 
 Task("Travis")
     .IsDependentOn("DoVersioning")
     .IsDependentOn("Build")
-    .IsDependentOn("Test")
     .IsDependentOn("CopyPackagesToArtifacts")
+    .IsDependentOn("Test")
+    .IsDependentOn("CodeCoverage")
+    .IsDependentOn("UploadCoverageReportsToCoveralls")
     .IsDependentOn("UploadPackages")
     ;
 
 Task("AppVeyor")
     .IsDependentOn("Build")
+    //.IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("Test")
     .IsDependentOn("UploadTestResultsToAppVeyor")
     ;
