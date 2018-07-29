@@ -10,8 +10,11 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
         InitFromArgs = true
     });
 
-    args.Target.SetDefaultValue("Default").Build(args);
-    
+    args.Target
+        .SetEmptyValues("")//Jenkins can send empty string so we need to treat empty string as NoValue
+        .SetDefaultValue("Default")
+        .Build(args);
+
     args.Configuration
         .SetDefaultValue("Release")
         .SetValidValues("Release", "Debug")

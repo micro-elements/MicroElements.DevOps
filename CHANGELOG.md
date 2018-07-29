@@ -1,3 +1,6 @@
+# 1.4.0 - beta
+- Added: SetEmptyValues for ScriptParam to treat values as NoValue
+
 # 1.3.0
 - Added: `CodeCoverage` task
 - Added: Coverlet CodeCoverage. see `UseCoverlet`

@@ -110,7 +110,8 @@ public class ScriptParam<T> : IScriptParam
     public T[] GetValues(ScriptArgs args) => Build(args).Values;
 
     public bool Required {get; set;} = false;
-    public T[] ValidValues {get; set;}
+    public T[] ValidValues {get; private set;}
+    public string[] EmptyValues {get; private set;}
 
     public string FormattedValue => IsSecret? "{Secured}" : MergedValue;
     private string MergedValue => _buildedValues.Count>0? String.Join(ListDelimeter, _buildedValues.Select(FormattedParamValue)) : NoValue;
@@ -196,6 +197,12 @@ public class ScriptParam<T> : IScriptParam
     public ScriptParam<T> SetValidValues(params T[] validValues)
     {
         this.ValidValues = validValues;
+        return this;
+    }
+
+    public ScriptParam<T> SetEmptyValues(params string[] emptyValues)
+    {
+        this.EmptyValues = emptyValues;
         return this;
     }
 
@@ -304,7 +311,6 @@ public class ScriptParam<T> : IScriptParam
 
     public IEnumerable<ValueGetter<T>> ArgumentOrEnvVar()
     {
-        var name = Name;
         ConvertFunc<T> convert = null;
         Func<string, object> ConvertToValue;
         Func<string, IEnumerable<string>> Split = input => input.Split(ListDelimeter[0]);
@@ -323,15 +329,24 @@ public class ScriptParam<T> : IScriptParam
         else
             convert = input => ConvertToValue(input).AsEnumerable<T>();
 
+        bool ValueIsNotEmpty(string value, string[] emptyValues) =>
+            emptyValues == null || emptyValues.All(emptyValue => !Equals(value, emptyValue));
+
+        ScriptArgsPredicate HasValidArgument = a =>
+            a.Context.HasArgument(Name) && ValueIsNotEmpty(a.Context.Argument<string>(Name), EmptyValues);
+
+        ScriptArgsPredicate HasValidEnvVar = a =>
+            a.Context.HasEnvironmentVariable(Name) && ValueIsNotEmpty(a.Context.EnvironmentVariable(Name), EmptyValues);
+
         yield return new ValueGetter<T>(
-            a=>a.Context.HasArgument(name),
-            a=>a.Context.Argument<string>(name),
+            HasValidArgument,
+            a=>a.Context.Argument<string>(Name),
             convert,
             ParamSource.CommandLine);
 
         yield return new ValueGetter<T>(
-            a=>a.Context.HasEnvironmentVariable(name),
-            a=>a.Context.EnvironmentVariable(name),
+            HasValidEnvVar,
+            a=>a.Context.EnvironmentVariable(Name),
             convert,
             ParamSource.EnvironmentVariable);
     }
