@@ -16,8 +16,6 @@ Task("Info")
 .Does(() => {
     // args.PrintParams();
     args.PrintGitInfo();
-
-   // Context.GitCommand(@"log -n 1 --format=format:%h ""version.props""");
 });
 
 Task("Package")
