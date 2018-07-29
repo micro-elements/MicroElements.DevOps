@@ -211,16 +211,6 @@ public static T CheckNotNull<T>(this T value, string paramName)
     return value;
 }
 
-public static IEnumerable<T> NotNull<T>(this IEnumerable<T> collection) => collection ?? Array.Empty<T>();
-
-public static ICollection<T> NotNull<T>(this ICollection<T> collection) => collection ?? Array.Empty<T>();
-
-public static T[] NotNull<T>(this T[] collection) => collection ?? Array.Empty<T>();
-
-public static IEnumerable<T> AsEnumerable<T>(this T value) => new T[]{value};
-
-public static IEnumerable<T> AsEnumerable<T>(this object value) => (new T[]{(T)value});
-
 public static class ProcessUtils
 {
     public static (int ExitCode, string Output) StartProcessAndReturnOutput(
