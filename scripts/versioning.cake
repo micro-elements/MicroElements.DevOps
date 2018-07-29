@@ -62,15 +62,15 @@ public class Versioning
 
         foreach(var line in file.ReadLines(Encoding.UTF8))
         {
-            if(line.Contains("<VersionPrefix>"))
+            if(line.Contains("<VersionPrefix>") && line.Contains("</VersionPrefix>"))
             {
                 version.VersionPrefix = GetTagValue(line, "VersionPrefix");
             }
-            if(line.Contains("<VersionSuffix>"))
+            if(line.Contains("<VersionSuffix>") && line.Contains("</VersionSuffix>"))
             {
                 version.VersionSuffix = GetTagValue(line, "VersionSuffix");
             }
-            if(line.Contains("<PackageReleaseNotes>"))
+            if(line.Contains("<PackageReleaseNotes>") && line.Contains("</PackageReleaseNotes>"))
             {
                 version.ReleaseNotes = GetTagValue(line, "PackageReleaseNotes");
             }
@@ -94,29 +94,36 @@ public class Versioning
         {
             context.Information("IsRunningOnTravisCI");
 
-            version.BuildNumber = context.TravisCI().Environment.Build.BuildNumber;
-            version.BranchName = context.TravisCI().Environment.Build.Branch;
-            version.CommitSha = context.TravisCI().Environment.Repository.Commit;
+            var travisCI = context.TravisCI().Environment;
+            version.BuildNumber = travisCI.Build.BuildNumber;
+            version.BranchName = travisCI.Build.Branch;
+            version.CommitSha = travisCI.Repository.Commit;
         }
         else if(context.BuildSystem().IsRunningOnAppVeyor)
         {
             context.Information("IsRunningOnAppVeyor");
 
-            version.BuildNumber = context.AppVeyor().Environment.Build.Number;
-            version.BranchName = context.AppVeyor().Environment.Repository.Branch;
-            version.CommitSha = context.AppVeyor().Environment.Repository.Commit.Id;
-            version.IsPullRequest = context.AppVeyor().Environment.PullRequest.IsPullRequest;
+            var appVeyor = context.AppVeyor().Environment;
+            version.BuildNumber = appVeyor.Build.Number;
+            version.BranchName = appVeyor.Repository.Branch;
+            version.CommitSha = appVeyor.Repository.Commit.Id;
+            var commitTimestamp = appVeyor.Repository.Commit.Timestamp;
+            var commitAuthor = appVeyor.Repository.Commit.Author;
+            var commitEmail = appVeyor.Repository.Commit.Email;
+            var commitMessage = appVeyor.Repository.Commit.Message;
+            var commitExtendedMessage = appVeyor.Repository.Commit.ExtendedMessage;
+
+            version.IsPullRequest = appVeyor.PullRequest.IsPullRequest;
         }
         else
         {
             var isLocalBuild = context.BuildSystem().IsLocalBuild;
 
             version.BranchName = context.GetGitBranch();
-            version.CommitSha = context.GetGitCommit();
+            version.CommitSha = context.GetGitCommitSha();
 
             context.Information($"GitBranch: {version.BranchName}");
             context.Information($"GitCommit: {version.CommitSha}");
-
         }
 
         return version;
@@ -197,6 +204,21 @@ public static VersionInfo SetReleaseNotesFromChangeLog(this VersionInfo version,
     return version;
 }
 
+public static void PrintGitInfo(this ScriptArgs args)
+{
+    var context = args.Context;
+
+    context.Information($"GetGitBranch1: {context.GetGitBranch()}");
+    context.Information($"GetGitBranch2: {context.GetGitBranch2()}");
+    context.Information($"GetGitBranch3: {context.GetGitBranch3()}");
+
+    context.Information($"GetGitCommitSha: {context.GetGitCommitSha()}");
+    context.Information($"GetGitCommitShaShort: {context.GetGitCommitShaShort()}");
+    context.Information($"GetGitCommitAuthorName: {context.GetGitCommitAuthorName()}");
+    context.Information($"GetGitCommitAuthorEmail: {context.GetGitCommitAuthorEmail()}");
+    context.Information($"GetGitCommitSubject: {context.GetGitCommitSubject()}");
+}
+
 public static string GitCommand(this ICakeContext context, string command)
 {
     context.Information($"Running git {command}");
@@ -224,14 +246,35 @@ public static string GetGitBranch2(this ICakeContext context)
     return branchName;
 }
 
-public static string GetGitCommit(this ICakeContext context)
+public static string GetGitBranch3(this ICakeContext context)
 {
-    //log --format=format:%h -n 1
-    //log --format=format:%H -n 1
-    //rev-parse master
-    var commitSha = context.GitCommand("log --format=format:%H -n 1");
-    return commitSha;
+    // Other variants: // https://stackoverflow.com/questions/6245570/how-to-get-the-current-branch-name-in-git
+    var branchName = context.GitCommand("rev-parse --abbrev-ref HEAD");
+    return branchName;
 }
+
+//
+public static string GetGitLastChange(this ICakeContext context)
+{
+    var branchName = context.GitCommand(@"log -n 1 --format=format:$(_ShortShaFormat) ""version,props""");
+    return branchName;
+}
+
+public static string GetGitCommitSha(this ICakeContext context) =>
+    context.GitCommand("log --format=format:%H -n 1");
+
+public static string GetGitCommitShaShort(this ICakeContext context) =>
+    context.GitCommand("log --format=format:%h -n 1");
+
+public static string GetGitCommitAuthorName(this ICakeContext context) =>
+    context.GitCommand("log --format=format:%an -n 1");
+
+public static string GetGitCommitAuthorEmail(this ICakeContext context) =>
+    context.GitCommand("log --format=format:%ae -n 1");
+
+public static string GetGitCommitSubject(this ICakeContext context) =>
+    context.GitCommand("log --format=format:%s -n 1");
+
 
 public static string GetFileHistory(this ICakeContext context)
 {

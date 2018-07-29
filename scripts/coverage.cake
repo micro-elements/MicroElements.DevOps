@@ -57,6 +57,17 @@ public static void DotNetToolInstall(this ScriptArgs args, string toolName, stri
     //args.Context.Tools.RegisterFile()
 }
 
+public static void PrintCoverallsInfo(this ScriptArgs args)
+{
+    var context = args.Context;
+
+    //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
+    args.DotNetToolInstall("coveralls.net", "1.0.0");
+
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
+        new ProcessArgumentBuilder().Append("--help"), printOutput: true);
+}
+
 public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 {
     var coverallsRepoToken = args.GetOrCreateParam<string>("COVERALLS_REPO_TOKEN")
@@ -83,6 +94,19 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
     foreach(var file in files)
     {
         args.Context.Information($"Uploading report {file} to Coveralls.io" );
+
+        /* 
+        --commitId <commitId>                    The git commit hash for the coverage report.
+        --commitBranch <commitBranch>            The git branch for the coverage report.
+        --commitAuthor <commitAuthor>            The git commit author for the coverage report.
+        --commitEmail <commitEmail>              The git commit author email for the coverage report.
+        --commitMessage <commitMessage>          The git commit message for the coverage report.
+        */
+
+        var commitId = args.Version.CommitSha;
+        var commitBranch = args.Version.BranchName;
+
+
 
         args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls", new ProcessArgumentBuilder()
             .Append("--opencover")

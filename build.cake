@@ -14,7 +14,10 @@ ScriptArgs args = new ScriptArgs(Context)
 
 Task("Info")
 .Does(() => {
-    args.PrintParams();
+    // args.PrintParams();
+    args.PrintGitInfo();
+
+   // Context.GitCommand(@"log -n 1 --format=format:%h ""version.props""");
 });
 
 Task("Package")
@@ -57,6 +60,7 @@ Task("Default")
 ;
 
 Task("Travis")
+    .IsDependentOn("Info")
     .IsDependentOn("Package")
     //.IsDependentOn("CopyPackagesToArtifacts")
     .IsDependentOn("UploadPackage")
