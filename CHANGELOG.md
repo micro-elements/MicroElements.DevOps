@@ -1,5 +1,7 @@
-# 1.4.0 - beta
-- Added: SetEmptyValues for ScriptParam to treat values as NoValue
+# 1.4.0
+- Added: `SetEmptyValues` for ScriptParam to treat some values as NoValue
+- Changed: `TestSourceLink` option value is true for CI servers because local builds are often not committed.
+- Fixed: Bug "Default value for ParamValue treats as NoValue"
 
 # 1.3.0
 - Added: `CodeCoverage` task

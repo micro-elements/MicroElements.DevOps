@@ -20,7 +20,7 @@ using System.Reflection;
 /// Converts value to ParamValue.
 /// </summary>
 public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = ParamSource.Conventions)
-    => !Equals(value, default(T)) ? new ParamValue<T>(value, source) : ParamValue<T>.NoValue;
+    => new ParamValue<T>(value, source);
 
 public static Type CakeGlobalType() => typeof(ScriptArgs).DeclaringType.GetTypeInfo();
 
