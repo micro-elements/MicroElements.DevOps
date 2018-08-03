@@ -64,7 +64,9 @@ public static ScriptArgs UseDefaultConventions(this ScriptArgs args)
     context.Information($"VERSION: {args.Version.VersionPrefix}");
 
     args.UseSourceLink.SetDefaultValue(true).Build(args);
-    args.TestSourceLink.SetDefaultValue(true).Build(args);
+
+    // TestSourceLink on CI servers because local builds are often not committed.
+    args.TestSourceLink.SetValue(a=>!a.Context.BuildSystem().IsLocalBuild).Build(args);
 
     return args;
 }

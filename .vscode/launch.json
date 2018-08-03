@@ -15,6 +15,7 @@
                 "--verbosity=diagnostic",
                 "--rootDir=${workspaceRoot}",
                 "--Target=Info",
+                "--TestSourceLink=false",
                 "--Header=\"-+++++++-,MicroElements,DevOps,-+++++++-\""
             ],
             "cwd": "${workspaceRoot}",
