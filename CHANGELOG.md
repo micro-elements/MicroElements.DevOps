@@ -1,3 +1,6 @@
+# 1.4.1
+- Fixed: HasValue for ParamValue<T> where T is ValueType 
+
 # 1.4.0
 - Added: `SetEmptyValues` for ScriptParam to treat some values as NoValue
 - Changed: `TestSourceLink` option value is true for CI servers because local builds are often not committed.

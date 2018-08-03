@@ -537,7 +537,7 @@ public class ValueGetter<T>
 
 public static bool HasNoValue<T>(this ParamValue<T> paramValue)
 {
-    return paramValue.Source==ParamSource.NoValue || EqualityComparer<T>.Default.Equals(paramValue.Value, default(T));
+    return paramValue.Source==ParamSource.NoValue || (typeof(T).IsClass && EqualityComparer<T>.Default.Equals(paramValue.Value, default(T)));
 }
 
 public static bool HasValue<T>(this ParamValue<T> paramValue) => !paramValue.HasNoValue();
