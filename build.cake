@@ -18,6 +18,9 @@ Task("Info")
     args.PrintGitInfo();
 });
 
+Task("AddReadme")
+    .Does(() => UpdateReadmeBadges(args));
+
 Task("Package")
 .Does(() => {
     CleanDirectory(args.ArtifactsDir);

@@ -1,6 +1,18 @@
 # MicroElements.DevOps
 DevOps scripts for CI and CD
 
+## Statuses
+[![License](https://img.shields.io/github/license/micro-elements/MicroElements.DevOps.svg)](https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/LICENSE)
+[![NuGetVersion](https://img.shields.io/nuget/v/MicroElements.DevOps.svg)](https://www.nuget.org/packages/MicroElements.DevOps)
+![NuGetDownloads](https://img.shields.io/nuget/dt/MicroElements.DevOps.svg)
+[![MyGetVersion](https://img.shields.io/myget/micro-elements/v/MicroElements.DevOps.svg)](https://www.myget.org/feed/micro-elements/package/nuget/MicroElements.DevOps)
+
+[![Travis](https://img.shields.io/travis/micro-elements/MicroElements.DevOps/master.svg?logo=travis)](https://travis-ci.org/micro-elements/MicroElements.DevOps)
+[![AppVeyor](https://img.shields.io/appveyor/ci/petriashev/microelements-devops.svg?logo=appveyor)](https://ci.appveyor.com/project/petriashev/microelements-devops)
+[![Coverage Status](https://img.shields.io/coveralls/micro-elements/MicroElements.DevOps.svg)](https://coveralls.io/r/micro-elements/MicroElements.DevOps)
+
+[![Gitter](https://img.shields.io/gitter/room/micro-elements/MicroElements.DevOps.svg)](https://gitter.im/micro-elements/MicroElements.DevOps)
+
 ## Main features
 - Based on CakeBuild
 - Supported OS: Windows, Linux
@@ -66,6 +78,7 @@ Runs:
 * [AddAppVeyorFile](#AddAppVeyorFile)
 * [AddCakeBootstrapFiles](#AddCakeBootstrapFiles)
 * [AddChangeLog](#AddChangeLog)
+* [AddReadme](#AddReadme)
 * [AddStyleCop](#AddStyleCop)
 
 ### Default
@@ -118,3 +131,8 @@ Param | Description | DefaulValue
 ---|---|---
 SrcDir | Sources directory. Contains projects. | src
 TODO: all params
+
+
+
+
+

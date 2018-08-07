@@ -1,3 +1,8 @@
+# 1.5.0
+- Added: `AddReadme` target (Adds filled readme), task added to `Init` task
+- Added: `UpdateReadmeBadges` target (Updates statuses section in readme)
+- Added KeyEqualityComparer for customizing key comparation
+
 # 1.4.1
 - Fixed: HasValue for ParamValue<T> where T is ValueType 
 

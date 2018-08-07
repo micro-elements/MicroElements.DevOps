@@ -56,6 +56,12 @@ Task("AddCakeBootstrapFiles")
 Task("AddChangeLog")
     .Does(() => AddChangeLog(args));
 
+Task("AddReadme")
+    .Does(() => AddReadme(args));
+
+Task("UpdateReadmeBadges")
+    .Does(() => UpdateReadmeBadges(args));
+
 Task("AddStyleCop")
     .Does(() => AddStyleCop(args));
 
@@ -101,6 +107,7 @@ Task("Init")
     .IsDependentOn("AddAppVeyorFile")
     .IsDependentOn("AddCakeBootstrapFiles")
     .IsDependentOn("AddChangeLog")
+    .IsDependentOn("AddReadme")
     .IsDependentOn("AddStyleCop")
 ;
 

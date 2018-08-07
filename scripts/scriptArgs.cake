@@ -16,6 +16,8 @@ public class ScriptArgs
     {
         Context = context;
         RootDir.SetFromArgs().SetValue(context.MakeAbsolute(context.Directory(rootDir))).Build(this);
+        KeyComparer = new KeyEqualityComparer();
+        Params = new ScriptParamList(KeyComparer);
     }
 
     [Description("The name of task to run.")]
@@ -100,9 +102,14 @@ public class ScriptArgs
     public ScriptParam<bool> ForceUploadPackages {get; set;}
 
     /// <summary>
+    /// Key comparer.
+    /// </summary>
+    public KeyEqualityComparer KeyComparer {get;}
+
+    /// <summary>
     /// Script parameters.
     /// </summary>
-    private ScriptParamList Params = new ScriptParamList();
+    private ScriptParamList Params {get;}
 
     public ScriptArgs Build(bool buildOnlyEmptyParams=true)
     {
@@ -125,7 +132,6 @@ public class ScriptArgs
             Params[scriptParam.Name] = scriptParam;
         }
     }
-
     public T Init<T>(System.Linq.Expressions.Expression<Func<ScriptArgs, T>> propExpression, InitializeParamSettings settings = null) where T : IScriptParam
     {
         var propertyInfo = (PropertyInfo)((System.Linq.Expressions.MemberExpression)propExpression.Body).Member;
@@ -143,7 +149,7 @@ public class ScriptArgs
 
     public bool ContainsKey(string key)
     {
-        return ParamKeys.Contains(key);
+        return ParamKeys.Contains(key, KeyComparer);
     }
 
     public IEnumerable<string> ParamKeys => Params.Keys;
@@ -229,6 +235,14 @@ public class ScriptArgs
 public class ScriptParamList : IEnumerable<IScriptParam>
 {
     private List<IScriptParam> _params = new List<IScriptParam>();
+
+    private IEqualityComparer<string> _keyComparer;
+
+    public ScriptParamList(IEqualityComparer<string> keyComparer)
+    {
+        _keyComparer = keyComparer.CheckNotNull(nameof(keyComparer));
+    }
+
     public IEnumerator<IScriptParam> GetEnumerator() => _params.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<IScriptParam>)_params).GetEnumerator();
 
@@ -272,6 +286,15 @@ public class ScriptParamList : IEnumerable<IScriptParam>
         }
     }
 
-    private int GetIndex(string name)
-        => _params.FindIndex(sp=>string.Equals(sp.Name, name, StringComparison.InvariantCultureIgnoreCase));
+    private int GetIndex(string name) => _params.FindIndex(sp => _keyComparer.Equals(sp.Name, name));
+}
+
+/// <summary>
+/// Key comparer.
+/// </summary>
+public class KeyEqualityComparer : IEqualityComparer<string>
+{
+    public bool Equals(string x, string y) => string.Equals(x, y, StringComparison.InvariantCultureIgnoreCase);
+
+    public int GetHashCode(string obj) => (obj ?? "").ToLower().GetHashCode();
 }

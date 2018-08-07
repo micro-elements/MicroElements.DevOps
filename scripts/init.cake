@@ -86,7 +86,11 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
     }
 }
 
-public static void FillProjectAttributes(this ScriptArgs args)
+/// <summary>
+/// Fills parameters: RepositoryType, RepositoryUrl, PackageProjectUrl, gitHubUser, 
+/// userName, gitHubProject, projectName, PackageLicenseUrl, Product, Copyright, Authors
+/// </summary>
+public static ScriptArgs FillProjectAttributes(this ScriptArgs args)
 {
     /*
     <Product></Product>
@@ -128,6 +132,10 @@ public static void FillProjectAttributes(this ScriptArgs args)
         {
             args.SetParam("Product", args.GetStringParam("projectName"));
             args.SetParam("Copyright", $"{DateTime.Today.Year}");
+            args.SetParam("projectNameAppVeyor",
+                args.GetStringParam("projectName")
+                    .Replace(".", "-")
+                    .ToLower());
         }
 
         //Authors
@@ -135,9 +143,8 @@ public static void FillProjectAttributes(this ScriptArgs args)
         {
             args.SetParam("Authors", args.GetStringParam("userName"));
         }
-
-        args.PrintParams();
     }
+    return args;
 }
 
 /// <summary>
@@ -307,4 +314,69 @@ public static void AddStyleCop(this ScriptArgs args)
         System.IO.File.WriteAllText(dirBuildPropsFilePath.FullPath, dirBuildPropsText);
         args.Context.Information($"Added import {importStyleCop} to {dirBuildPropsFilePath}");
     }
+}
+
+/// <summary>
+/// Adds README.md
+/// </summary>
+public static ScriptArgs AddReadme(this ScriptArgs args)
+{
+    var readmePath = args.KnownFiles.Readme.Value.FullPath;
+    if(!args.Context.FileExists(readmePath))
+        args.AddFileFromTemplate("README.md", args.RootDir);
+    
+    if(!args.ContainsKey("gitHubUser"))
+        args.FillProjectAttributes();
+    var readmeContent = System.IO.File.ReadAllText(readmePath);
+    if(false && readmeContent.Contains("{Statuses}"))
+    {
+        var statuses = args.GetTemplate("statuses.md").FillTags(args);
+        readmeContent = readmeContent.Replace("{Statuses}", statuses);
+        System.IO.File.WriteAllText(readmePath, readmeContent);
+    }
+    return args;
+}
+
+/// <summary>
+/// Regenerates Statuses section from statuses.md template.
+/// </summary>
+public static ScriptArgs UpdateReadmeBadges(this ScriptArgs args)
+{
+    var readmePath = args.KnownFiles.Readme.Value.FullPath;
+    if(!args.Context.FileExists(readmePath))
+        throw new Exception($"{readmePath} is not exist!");
+    
+    if(!args.ContainsKey("gitHubUser"))
+        args.FillProjectAttributes();
+    const string statusesHeader = "## Statuses";
+    var readmeContent = System.IO.File.ReadAllText(readmePath);
+    if(readmeContent.Contains(statusesHeader))
+    {
+        StringBuilder result = new StringBuilder();
+        var lines = readmeContent.SplitLines();
+        bool append = true;
+        foreach(string line in lines)
+        {
+            if(append)
+                result.AppendLine(line);
+            else
+            {
+                append = line.StartsWith("## ");
+                if(append)
+                {
+                    result.AppendLine();
+                    result.AppendLine(line);
+                }
+            }
+            if(line==statusesHeader)
+            {
+                var statuses = args.GetTemplate("statuses.md").FillTags(args);
+                result.AppendLine(statuses);
+                append = false;
+            }
+        }
+        System.IO.File.WriteAllText(readmePath, result.ToString());
+    }
+
+    return args;
 }
