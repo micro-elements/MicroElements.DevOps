@@ -8,9 +8,10 @@
             "program": "${workspaceRoot}/tools/Cake.CoreCLR/0.29.0/Cake.dll",
             "args": [
                 "${workspaceRoot}/build.cake",
+                "--devOpsRoot=${workspaceRoot}",
                 //uncomment and edit for component script debug
-                //"${workspaceRoot}/tools/microelements.devops/1.4.1/scripts/main.cake",
-                //"--devOpsRoot=${workspaceRoot}/tools/microelements.devops/1.4.1",
+                //"${workspaceRoot}/tools/microelements.devops/1.5.0/scripts/main.cake",
+                //"--devOpsRoot=${workspaceRoot}/tools/microelements.devops/1.5.0",
                 "--debug",
                 "--verbosity=diagnostic",
                 "--rootDir=${workspaceRoot}",

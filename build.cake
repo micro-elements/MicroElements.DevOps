@@ -18,6 +18,9 @@ Task("Info")
     args.PrintGitInfo();
 });
 
+Task("AddReadme")
+    .Does(() => UpdateReadmeBadges(args));
+
 Task("Package")
 .Does(() => {
     CleanDirectory(args.ArtifactsDir);
@@ -50,8 +53,10 @@ Task("DoVersioning")
 Task("CopyPackagesToArtifacts")
     .Does(() => CopyPackagesToArtifacts(args));
 
-Task("UploadPackage")
-    .Does(() => args.UploadPackages());
+Task("UploadPackages")
+    .WithCriteria(()=>args.UploadPackages)
+    .WithCriteria(()=>args.Version.IsRelease)
+    .Does(() => UploadPackages(args));
 
 Task("Default")
     .IsDependentOn("Package")
@@ -60,8 +65,8 @@ Task("Default")
 Task("Travis")
     .IsDependentOn("Info")
     .IsDependentOn("Package")
-    //.IsDependentOn("CopyPackagesToArtifacts")
-    .IsDependentOn("UploadPackage")
+    .IsDependentOn("DoVersioning")
+    .IsDependentOn("UploadPackages")
 ;
 
 Task("AppVeyor")

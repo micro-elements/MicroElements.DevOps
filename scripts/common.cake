@@ -192,7 +192,7 @@ public static string AddFileFromTemplate(
     return content;
 }
 
-public static string FillTags(string inputXml, ScriptArgs args)
+public static string FillTags(this string inputXml, ScriptArgs args)
 {
     foreach (var key in args.ParamKeys)
     {
