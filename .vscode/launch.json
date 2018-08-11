@@ -10,8 +10,8 @@
                 "${workspaceRoot}/build.cake",
                 "--devOpsRoot=${workspaceRoot}",
                 //uncomment and edit for component script debug
-                //"${workspaceRoot}/tools/microelements.devops/1.5.0/scripts/main.cake",
-                //"--devOpsRoot=${workspaceRoot}/tools/microelements.devops/1.5.0",
+                //"${workspaceRoot}/tools/microelements.devops/1.6.0/scripts/main.cake",
+                //"--devOpsRoot=${workspaceRoot}/tools/microelements.devops/1.6.0",
                 "--debug",
                 "--verbosity=diagnostic",
                 "--rootDir=${workspaceRoot}",

@@ -1,3 +1,7 @@
+# 1.6.0
+- Added: `BuildDirectory` and `BuildSamples`
+- Changed: Added chaining for building and testing methods
+
 # 1.5.0
 - Added: `AddReadme` target (Adds filled readme), task added to `Init` task
 - Added: `UpdateReadmeBadges` target (Updates statuses section in readme)
