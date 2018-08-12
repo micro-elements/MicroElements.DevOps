@@ -130,9 +130,4 @@ TODO: samples
 Param | Description | DefaulValue
 ---|---|---
 SrcDir | Sources directory. Contains projects. | src
-TODO: all params
-
-
-
-
 

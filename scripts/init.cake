@@ -88,7 +88,8 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
 
 /// <summary>
 /// Fills parameters: RepositoryType, RepositoryUrl, PackageProjectUrl, gitHubUser, 
-/// userName, gitHubProject, projectName, PackageLicenseUrl, Product, Copyright, Authors
+/// userName, gitHubProject, projectName, PackageLicenseUrl, Product, Copyright, Authors.
+/// <p>Invokes only one time.</p>
 /// </summary>
 public static ScriptArgs FillProjectAttributes(this ScriptArgs args)
 {
@@ -102,6 +103,10 @@ public static ScriptArgs FillProjectAttributes(this ScriptArgs args)
     <RepositoryType></RepositoryType>
     <RepositoryUrl></RepositoryUrl>
     */
+
+    // Skip if was filled before.
+    if(args.GetParamOrDefault("IsProjectAttributesFilled", false))
+        return args;
 
     var result = ProcessUtils.StartProcessAndReturnOutput(args.Context, "git", "remote get-url origin");
     if(result.ExitCode==0)
@@ -144,6 +149,8 @@ public static ScriptArgs FillProjectAttributes(this ScriptArgs args)
             args.SetParam("Authors", args.GetStringParam("userName"));
         }
     }
+    args.SetParam<bool>("IsProjectAttributesFilled", true);
+
     return args;
 }
 

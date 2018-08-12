@@ -192,16 +192,19 @@ public static string AddFileFromTemplate(
     return content;
 }
 
-public static string FillTags(this string inputXml, ScriptArgs args)
+public static string FillTags(this string inputTemplate, ScriptArgs args)
 {
+    if(inputTemplate.Contains("gitHubUser"))
+        args.FillProjectAttributes();
+
     foreach (var key in args.ParamKeys)
     {
         var value = args.GetStringParam(key);
-        inputXml = inputXml.Replace($"${key}$", $"{value}");
-        inputXml = inputXml.Replace($"{{{key}}}", $"{value}");
-        inputXml = inputXml.Replace($"<{key}></{key}>", $"<{key}>{value}</{key}>");
+        inputTemplate = inputTemplate.Replace($"${key}$", $"{value}");
+        inputTemplate = inputTemplate.Replace($"{{{key}}}", $"{value}");
+        inputTemplate = inputTemplate.Replace($"<{key}></{key}>", $"<{key}>{value}</{key}>");
     }
-    return inputXml;
+    return inputTemplate;
 }
 
 public static T CheckNotNull<T>(this T value, string paramName)

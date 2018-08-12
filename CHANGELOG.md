@@ -1,5 +1,6 @@
 # 1.6.0
 - Added: `BuildDirectory` and `BuildSamples`
+- Added: `GetReleaseNotes` from ChangeLog and `GetMarkdownParagraph`
 - Changed: Added chaining for building and testing methods
 
 # 1.5.0

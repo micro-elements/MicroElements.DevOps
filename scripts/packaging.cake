@@ -121,3 +121,82 @@ public static void UploadPackages(this ScriptArgs args)
 
     context.Information("UploadPackages finished.");
 }
+
+/// <summary>
+/// Options for GetReleaseNotes.
+/// </summary>
+public class GetReleaseNotesOptions
+{
+    internal bool IsFromChangelog {get; private set;} = true;
+    internal int NumReleases {get; private set;} = 0;
+
+    public GetReleaseNotesOptions FromChangelog(bool fromChangelog = true){IsFromChangelog = fromChangelog; return this;}
+    public GetReleaseNotesOptions WithNumReleases(int numReleases = 1){NumReleases = numReleases; return this;}
+}
+
+/// <summary>
+/// Gets ReleaseNotes. By default uses Changelog.md.
+/// </summary>
+/// <param name="args">ScriptArgs to use.</param>
+/// <param name="options">Options for GetReleaseNotes.</param>
+/// <returns>Release notes.</returns>
+public static string GetReleaseNotes(this ScriptArgs args, Func<GetReleaseNotesOptions,GetReleaseNotesOptions> options = null)
+{
+    GetReleaseNotesOptions opt = new GetReleaseNotesOptions();
+    if(options!=null)
+        opt = options(opt);
+    string releaseNotes = "no release notes";
+    if(opt.IsFromChangelog)
+    {
+        var changeLogPath = args.KnownFiles.ChangeLog.Value.FullPath;
+        releaseNotes = System.IO.File.ReadAllText(changeLogPath);
+
+        if(opt.NumReleases > 0)
+        {
+            StringBuilder result = new StringBuilder();
+            var lines = releaseNotes.SplitLines();
+            int headers = 0;
+            foreach(var line in lines)
+            {
+                if(line.StartsWith("# "))
+                {
+                    headers++;
+                    if(headers > opt.NumReleases)
+                        break;
+                }
+
+                result.AppendLine(line);
+            }
+
+            result.AppendLine();
+
+            string changeLogUrl = "https://github.com/{gitHubUser}/{gitHubProject}/blob/master/CHANGELOG.md".FillTags(args);
+            result.AppendLine($"Full release notes can be found at: {changeLogUrl}");
+
+            releaseNotes = result.ToString();
+        }
+    }
+
+    return releaseNotes;
+}
+
+public static string GetMarkdownParagraph(this ScriptArgs args, string filePath, string headerName)
+{
+    var content = System.IO.File.ReadAllText(filePath);
+
+    StringBuilder result = new StringBuilder();
+    var lines = content.SplitLines();
+    bool readLine = false;
+    foreach(var line in lines)
+    {
+        if(!readLine && line.StartsWith($"# {headerName}") || line.StartsWith($"## {headerName}"))
+            readLine = true;
+        else if(readLine && line.StartsWith($"#"))
+            break;
+
+        if(readLine)
+            result.AppendLine(line);
+    }
+
+    return result.ToString();
+}

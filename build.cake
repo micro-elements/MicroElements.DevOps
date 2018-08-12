@@ -25,10 +25,10 @@ Task("Package")
 .Does(() => {
     CleanDirectory(args.ArtifactsDir);
 
-    var description = System.IO.File.ReadAllText("./README.md");
-    //todo: here must be more clever...
-    description = description.Substring(0, description.IndexOf("## Tasks"));
-    var releaseNotes = System.IO.File.ReadAllText("./CHANGELOG.md");
+    var description = "DevOps scripts for CI and CD";
+    var mainFeatures = args.GetMarkdownParagraph(args.KnownFiles.Readme.Value.FullPath, "Main features");
+    var fullDescription = $"{description}\r\n{mainFeatures}";
+    var releaseNotes = args.GetReleaseNotes(opt => opt.FromChangelog().WithNumReleases(5));
     var buildDir = args.ArtifactsDir / "build";
     var packSettings = new NuGetPackSettings()
     {
@@ -36,9 +36,8 @@ Task("Package")
         OutputDirectory = args.PackagesDir,
         BasePath = buildDir,
         ReleaseNotes = new string[] {releaseNotes},
-        Description = description
+        Description = fullDescription
     };
-    
     
     CopyDirectory("./resources", $"{buildDir}/resources");
     CopyDirectory("./scripts", $"{buildDir}/scripts");

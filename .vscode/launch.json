@@ -15,7 +15,7 @@
                 "--debug",
                 "--verbosity=diagnostic",
                 "--rootDir=${workspaceRoot}",
-                "--Target=Info",
+                "--Target=Default",
                 "--TestSourceLink=false",
                 "--Header=\"-+++++++-,MicroElements,DevOps,-+++++++-\""
             ],
