@@ -156,7 +156,7 @@ public class ScriptArgs
 
     public ScriptParam<T> SetParam<T>(string name, T value, ParamSource paramSource = ParamSource.Conventions)
     {
-        return GetOrCreateParam(name, value).SetValue(value, paramSource).Build(this);
+        return GetOrCreateParam<T>(name).SetValue(value, paramSource).Build(this);
     }
 
     public ScriptParam<T> AddParam<T>(ScriptParam<T> scriptParam)
@@ -192,10 +192,10 @@ public class ScriptArgs
         return (ScriptParam<T>)scriptParam;
     }
 
-    public ScriptParam<T> GetOrCreateParam<T>(string name, T value)
+    public ScriptParam<T> GetOrCreateParam<T>(string name, T value, ParamSource paramSource)
     {
         if(!Params.TryGetValue(name, out var scriptParam))
-            return AddParam<T>(name, value);
+            return AddParam<T>(name, value, paramSource);
         if(typeof(T)!=scriptParam.Type)
             throw new Exception($"Param {name} has type {scriptParam.Type} but type {typeof(T)} was requested!");
         return (ScriptParam<T>)scriptParam;

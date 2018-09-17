@@ -11,11 +11,16 @@ public static string NugetSourcesArg(this ScriptArgs args) =>
 ///////////////////////////////////////////////////////////////////////////////
 
 /// <summary>
+/// Alias for <see cref="BuildProjects">.
+/// </summary>
+public static ScriptArgs BuildSrc(this ScriptArgs args) => args.BuildProjects();
+
+/// <summary>
 /// Builds src dir.
 /// <p>It's the main build method that builds projects with SourceLink.</p>
 /// </summary>
 /// <param name="args">ScriptArgs to use.</param>
-public static ScriptArgs Build(this ScriptArgs args)
+public static ScriptArgs BuildProjects(this ScriptArgs args)
 {
     var context = args.Context;
 

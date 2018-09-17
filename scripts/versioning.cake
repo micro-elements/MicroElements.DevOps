@@ -36,7 +36,7 @@ public class Versioning
   <PropertyGroup>
     <VersionPrefix>{version.VersionPrefix}</VersionPrefix>
     <VersionSuffix>{version.VersionSuffix}</VersionSuffix>
-    <PackageReleaseNotes>{version.ReleaseNotes}</PackageReleaseNotes>
+    <PackageReleaseNotes><![CDATA[${version.ReleaseNotes}]]></PackageReleaseNotes>
 
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(VersionPrefix)</FileVersion>
@@ -70,6 +70,8 @@ public class Versioning
             {
                 version.VersionSuffix = GetTagValue(line, "VersionSuffix");
             }
+
+            // todo: this is not right (releaseNotes contains more than one line...)
             if(line.Contains("<PackageReleaseNotes>") && line.Contains("</PackageReleaseNotes>"))
             {
                 version.ReleaseNotes = GetTagValue(line, "PackageReleaseNotes");
@@ -179,7 +181,7 @@ public static void DoVersioning(this ScriptArgs args)
     }
 
     // ChangeLog
-    version.SetReleaseNotesFromChangeLog(args);
+    version.ReleaseNotes = args.GetReleaseNotes(opt => opt.FromChangelog().WithNumReleases(5));
 
     // Format and write version.props
     var versionPropsFileName = args.KnownFiles.VersionProps.Value.FullPath;

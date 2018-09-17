@@ -7,15 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 
-// todo: dependency
-// done: auto creation
-// todo: remove versioning.cake dependency
-// done: factory to param
-// DirectoryPath and FilePath ext
-// done: DirectoryPath param!!!
-// done: add resources dirs
-// done: --devopsRoot --devopsVersion
-
 /// <summary>
 /// Converts value to ParamValue.
 /// </summary>
@@ -24,13 +15,24 @@ public static ParamValue<T> ToParamValue<T>(this T value, ParamSource source = P
 
 public static Type CakeGlobalType() => typeof(ScriptArgs).DeclaringType.GetTypeInfo();
 
-public static ParamValue<T> ArgumentOrEnvVar<T>(this ICakeContext context, string name)
+public static string GetEnvVarNameIgnoreCase(string name)
 {
-    if(context.HasArgument(name))
-        return new ParamValue<T>(context.Argument<T>(name, default(T)), ParamSource.CommandLine);
-    if(context.HasEnvironmentVariable(name))
-        return new ParamValue<T>((T)Convert.ChangeType(context.EnvironmentVariable(name), typeof(T)), ParamSource.EnvironmentVariable);
-    return new ParamValue<T>(default(T), ParamSource.NoValue);
+    return Environment.GetEnvironmentVariables()
+        .Keys
+        .OfType<string>()
+        .FirstOrDefault(k=>k.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+}
+
+public static bool HasEnvironmentVariableIgnoreCase(this ScriptArgs args, string name)
+{
+    var key = GetEnvVarNameIgnoreCase(name);
+    return key!=null;
+}
+
+public static string EnvironmentVariableIgnoreCase(this ScriptArgs args, string name)
+{
+    var key = GetEnvVarNameIgnoreCase(name);
+    return args.Context.EnvironmentVariable(key??name);
 }
 
 public static string NormalizePath(this string path) => path.ToLowerInvariant().Replace('\\', '/').TrimEnd('/');

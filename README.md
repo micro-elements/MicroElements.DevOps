@@ -8,7 +8,7 @@ DevOps scripts for CI and CD
 [![MyGetVersion](https://img.shields.io/myget/micro-elements/v/MicroElements.DevOps.svg)](https://www.myget.org/feed/micro-elements/package/nuget/MicroElements.DevOps)
 
 [![Travis](https://img.shields.io/travis/micro-elements/MicroElements.DevOps/master.svg?logo=travis)](https://travis-ci.org/micro-elements/MicroElements.DevOps)
-[![AppVeyor](https://img.shields.io/appveyor/ci/petriashev/microelements-devops.svg?logo=appveyor)](https://ci.appveyor.com/project/petriashev/microelements-devops)
+[![AppVeyor](https://img.shields.io/appveyor/ci/micro-elements/microelements-devops.svg?logo=appveyor)](https://ci.appveyor.com/project/micro-elements/microelements-devops)
 [![Coverage Status](https://img.shields.io/coveralls/micro-elements/MicroElements.DevOps.svg)](https://coveralls.io/r/micro-elements/MicroElements.DevOps)
 
 [![Gitter](https://img.shields.io/gitter/room/micro-elements/MicroElements.DevOps.svg)](https://gitter.im/micro-elements/MicroElements.DevOps)

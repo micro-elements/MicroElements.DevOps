@@ -153,27 +153,33 @@ public static string GetReleaseNotes(this ScriptArgs args, Func<GetReleaseNotesO
 
         if(opt.NumReleases > 0)
         {
+            bool IsVersionHeader(string line) => line.StartsWith("# ");
             StringBuilder result = new StringBuilder();
             var lines = releaseNotes.SplitLines();
-            int headers = 0;
-            foreach(var line in lines)
+            var numHeaders = lines.Count(IsVersionHeader);
+
+            if(numHeaders > opt.NumReleases)
             {
-                if(line.StartsWith("# "))
+                int headers = 0;
+                foreach(var line in lines)
                 {
-                    headers++;
-                    if(headers > opt.NumReleases)
-                        break;
+                    if(IsVersionHeader(line))
+                    {
+                        headers++;
+                        if(headers > opt.NumReleases)
+                            break;
+                    }
+
+                    result.AppendLine(line);
                 }
 
-                result.AppendLine(line);
+                result.AppendLine();
+
+                string changeLogUrl = "https://github.com/{gitHubUser}/{gitHubProject}/blob/master/CHANGELOG.md".FillTags(args);
+                result.AppendLine($"Full release notes can be found at: {changeLogUrl}");
+
+                releaseNotes = result.ToString();
             }
-
-            result.AppendLine();
-
-            string changeLogUrl = "https://github.com/{gitHubUser}/{gitHubProject}/blob/master/CHANGELOG.md".FillTags(args);
-            result.AppendLine($"Full release notes can be found at: {changeLogUrl}");
-
-            releaseNotes = result.ToString();
         }
     }
 

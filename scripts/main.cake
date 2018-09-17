@@ -66,7 +66,7 @@ Task("AddStyleCop")
     .Does(() => AddStyleCop(args));
 
 Task("Build")
-    .Does(() => Build(args));
+    .Does(() => BuildProjects(args));
 
 Task("Test")
     .WithCriteria(()=>args.RunTests)

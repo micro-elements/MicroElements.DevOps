@@ -1,6 +1,8 @@
 #load scriptArgs.cake
 #load common.cake
 
+using System.Linq;
+
 /// <summary>
 /// ScriptParam base interface.
 /// </summary>
@@ -336,7 +338,7 @@ public class ScriptParam<T> : IScriptParam
             a.Context.HasArgument(Name) && ValueIsNotEmpty(a.Context.Argument<string>(Name), EmptyValues);
 
         ScriptArgsPredicate HasValidEnvVar = a =>
-            a.Context.HasEnvironmentVariable(Name) && ValueIsNotEmpty(a.Context.EnvironmentVariable(Name), EmptyValues);
+            a.HasEnvironmentVariableIgnoreCase(Name) && ValueIsNotEmpty(a.EnvironmentVariableIgnoreCase(Name), EmptyValues);
 
         yield return new ValueGetter<T>(
             HasValidArgument,
@@ -346,7 +348,7 @@ public class ScriptParam<T> : IScriptParam
 
         yield return new ValueGetter<T>(
             HasValidEnvVar,
-            a=>a.Context.EnvironmentVariable(Name),
+            a=>a.EnvironmentVariableIgnoreCase(Name),
             convert,
             ParamSource.EnvironmentVariable);
     }
