@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-##########################################################################
-# This is the modified Cake bootstrapper script for Linux and OS X.
-##########################################################################
+#################################################################################################################
+# This is the MicroElements.DevOps Cake bootstrapper script for Linux and OS X.
+# For latest version see: https://github.com/micro-elements/MicroElements.DevOps/blob/master/resources/build.sh
+#################################################################################################################
 
 echo "Starting build.sh"
 

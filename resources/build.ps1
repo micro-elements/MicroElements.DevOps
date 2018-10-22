@@ -1,7 +1,7 @@
-##########################################################################
-# This is modified Cake bootstrapper script for PowerShell.
-# The initial file was downloaded from https://github.com/cake-build/resources
-##########################################################################
+#################################################################################################################
+# This is the MicroElements.DevOps Cake bootstrapper script for PowerShell.
+# For latest version see: https://github.com/micro-elements/MicroElements.DevOps/blob/master/resources/build.ps1
+#################################################################################################################
 
 [CmdletBinding()]
 Param(
