@@ -331,11 +331,12 @@ public static ScriptArgs AddReadme(this ScriptArgs args)
     var readmePath = args.KnownFiles.Readme.Value.FullPath;
     if(!args.Context.FileExists(readmePath))
         args.AddFileFromTemplate("README.md", args.RootDir);
-    
+
     if(!args.ContainsKey("gitHubUser"))
         args.FillProjectAttributes();
+
     var readmeContent = System.IO.File.ReadAllText(readmePath);
-    if(false && readmeContent.Contains("{Statuses}"))
+    if(readmeContent.Contains("{Statuses}"))
     {
         var statuses = args.GetTemplate("statuses.md").FillTags(args);
         readmeContent = readmeContent.Replace("{Statuses}", statuses);

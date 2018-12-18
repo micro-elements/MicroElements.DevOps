@@ -1,3 +1,6 @@
+# 1.7.1
+- Fixed: AddReadme statuses section generation
+
 # 1.7.0
 - Changed: ReleaseNotes limited by 5 last versions by default
 - Added: `HasEnvironmentVariableIgnoreCase`, `EnvironmentVariableIgnoreCase` 
