@@ -1,6 +1,9 @@
+# 1.8.0
+- Changed: cake version updated to 0.31.0
+- Fixed: AddReadme template placeholders fill
+
 # 1.7.2
 - Changed: coverlet.msbuild updated to 2.5.0
-- Fixed: AddReadme template placeholders fill
 
 # 1.7.1
 - Fixed: AddReadme statuses section generation

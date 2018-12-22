@@ -334,7 +334,7 @@ public static ScriptArgs AddReadme(this ScriptArgs args)
         args.FillProjectAttributes();
 
     if(!args.Context.FileExists(readmePath))
-        args.AddFileFromTemplate("README.md", args.RootDir);
+        args.AddFileFromTemplate("README.md", args.RootDir, opt=>opt.FillFromScriptArgs());
 
     var readmeContent = System.IO.File.ReadAllText(readmePath);
     if(readmeContent.Contains("{Statuses}"))
