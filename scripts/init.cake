@@ -329,11 +329,12 @@ public static void AddStyleCop(this ScriptArgs args)
 public static ScriptArgs AddReadme(this ScriptArgs args)
 {
     var readmePath = args.KnownFiles.Readme.Value.FullPath;
-    if(!args.Context.FileExists(readmePath))
-        args.AddFileFromTemplate("README.md", args.RootDir);
 
     if(!args.ContainsKey("gitHubUser"))
         args.FillProjectAttributes();
+
+    if(!args.Context.FileExists(readmePath))
+        args.AddFileFromTemplate("README.md", args.RootDir);
 
     var readmeContent = System.IO.File.ReadAllText(readmePath);
     if(readmeContent.Contains("{Statuses}"))

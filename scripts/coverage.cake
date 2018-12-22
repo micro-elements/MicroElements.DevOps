@@ -17,7 +17,7 @@ public static void RunCoverage(this ScriptArgs args)
 public static ScriptArgs UseCoverlet(this ScriptArgs args)
 {
     args.CoverageTask = (a) => RunCoverlet(a);
-    //needs <PackageReference Include="coverlet.msbuild" Version="2.1.1" PrivateAssets="All" /> 
+    //needs <PackageReference Include="coverlet.msbuild" Version="2.5.0" PrivateAssets="All" /> 
     return args;
 }
 
