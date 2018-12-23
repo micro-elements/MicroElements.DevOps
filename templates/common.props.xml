@@ -4,10 +4,13 @@
     <Product></Product>
     <Copyright></Copyright>
     <Authors></Authors>
-    <PackageIconUrl></PackageIconUrl>
+    <Description></Description>
+
+    <PackageTags></PackageTags>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageLicenseUrl></PackageLicenseUrl>
     <RepositoryType></RepositoryType>
     <RepositoryUrl></RepositoryUrl>
+    <PackageIconUrl></PackageIconUrl>
   </PropertyGroup>
 </Project>
