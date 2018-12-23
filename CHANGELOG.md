@@ -1,6 +1,6 @@
-# 1.8.0
-- Changed: cake version updated to 0.31.0
+# 1.7.3
 - Fixed: AddReadme template placeholders fill
+- Changed: Added more package props to common.props
 
 # 1.7.2
 - Changed: coverlet.msbuild updated to 2.5.0
