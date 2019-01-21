@@ -101,7 +101,7 @@ public class Versioning
             version.BranchName = travisCI.Build.Branch;
             version.CommitSha = travisCI.Repository.Commit;
 
-            version.IsPullRequest = travisCI.Repository.PullRequest != null;
+            version.IsPullRequest = travisCI.Repository.PullRequest != "false";
         }
         else if(context.BuildSystem().IsRunningOnAppVeyor)
         {

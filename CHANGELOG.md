@@ -1,3 +1,6 @@
+# 1.8.1
+- Fixed IsPullRequest evaluation for travis
+
 # 1.8.0
 - Added version dump on build
 - Added IsPullRequest evaluation for travis
