@@ -100,6 +100,8 @@ public class Versioning
             version.BuildNumber = travisCI.Build.BuildNumber;
             version.BranchName = travisCI.Build.Branch;
             version.CommitSha = travisCI.Repository.Commit;
+
+            version.IsPullRequest = travisCI.Repository.PullRequest != null;
         }
         else if(context.BuildSystem().IsRunningOnAppVeyor)
         {
@@ -183,11 +185,21 @@ public static void DoVersioning(this ScriptArgs args)
     // ChangeLog
     version.ReleaseNotes = args.GetReleaseNotes(opt => opt.FromChangelog().WithNumReleases(5));
 
+    // Dump version values
+    context.Information($"version.IsRelease: {version.IsRelease}");
+    context.Information($"version.IsPullRequest: {version.IsPullRequest}");
+    context.Information($"version.BranchName: {version.BranchName}");
+    context.Information($"version.BuildNumber: {version.BuildNumber}");
+    context.Information($"version.CommitSha: {version.CommitSha}");
+    context.Information($"version.VersionPrefix: {version.VersionPrefix}");
+    context.Information($"version.VersionSuffix: {version.VersionSuffix}");
+
     // Format and write version.props
     var versionPropsFileName = args.KnownFiles.VersionProps.Value.FullPath;
     var versionPropsContent= Versioning.FormatVersionProps(version);
     System.IO.File.WriteAllText(versionPropsFileName, versionPropsContent);
 
+    // Dump version.props
     context.Information("VERSION_PROPS:");
     context.Information(versionPropsContent);
 }

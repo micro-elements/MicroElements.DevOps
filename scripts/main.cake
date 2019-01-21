@@ -69,7 +69,7 @@ Task("Build")
     .Does(() => BuildProjects(args));
 
 Task("Test")
-    .WithCriteria(()=>args.RunTests)
+    .WithCriteria(()=>args.RunTests, "RunTests disabled")
     .Does(() => RunTests(args));
 
 Task("UploadTestResultsToAppVeyor")
@@ -81,8 +81,9 @@ Task("CopyPackagesToArtifacts")
     .Does(() => CopyPackagesToArtifacts(args));
 
 Task("UploadPackages")
-    .WithCriteria(()=>args.UploadPackages)
-    .WithCriteria(()=>args.Version.IsRelease)
+    .WithCriteria(()=>args.UploadPackages, "UploadPackages==false")
+    .WithCriteria(()=>args.Version.IsRelease, "Version is not Release")
+    .WithCriteria(()=>!args.Version.IsPullRequest, "PR not allowed to upload")
     .Does(() => UploadPackages(args));
 
 Task("DoVersioning")

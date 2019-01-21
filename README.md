@@ -29,13 +29,34 @@ Open a new PowerShell window and run the following command.
 Invoke-WebRequest https://raw.githubusercontent.com/micro-elements/MicroElements.DevOps/master/resources/build.ps1 -OutFile build.ps1
 ```
 
-### 2. Initialize component
+### 2. Run Init script
 Run target `Init`
 ```ps
 ./build.ps1 -Target "Init"
 ```
 
-### 3. Usage
+#### Result
+- generated project
+- generated test project
+- travis.yml
+- appveyor.yml
+- build.ps1
+- build.sh
+- CHANGELOG.md
+- README.md
+- common.props
+- version.props
+- src/Directory.Build.props
+- test/Directory.Build.props
+- stylecop integration
+- Readme statuses generated
+
+### 3. Project initialization
+- Fill common.props: Description, PackageTags, PackageIconUrl (other attributes was filled autpmatically by init script)
+
+
+
+### 4. Usage
 
 #### Local build
 

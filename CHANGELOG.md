@@ -1,3 +1,8 @@
+# 1.8.0
+- Added version dump on build
+- Added IsPullRequest evaluation for travis
+- Changed: UploadPackaged disabled for PullRequests
+
 # 1.7.3
 - Fixed: AddReadme template placeholders fill
 - Changed: Added more package props to common.props
