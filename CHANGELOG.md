@@ -1,3 +1,8 @@
+# 1.9.0
+- UploadPackagedIfNeeded with detailed information
+- UploadPackagedIfNeeded uses ForceUploadPackages
+- GetTestProjectsFunc can be used to override default test project search
+
 # 1.8.1
 - Fixed IsPullRequest evaluation for travis
 
