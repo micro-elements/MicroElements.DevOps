@@ -103,6 +103,49 @@ public static void CopyPackagesToArtifacts(this ScriptArgs args)
         context.CopyFiles(files, args.PackagesDir);
 }
 
+/// <summary>
+/// Uploads packages if meets conditions.
+/// </summary>
+/// <param name="args">ScriptArgs.</param>
+public static void UploadPackagesIfNeeded(this ScriptArgs args)
+{
+    bool needUpload = true;
+    string message = "";
+
+    if(args.ForceUploadPackages)
+    {
+        needUpload = true;
+        message = "ForceUploadPackages is true so forcing upload";
+        args.Context.Information(message);
+    }
+    else
+    {
+        if(!args.UploadPackages)
+        {
+            needUpload = false;
+            message = "UploadPackages is false";
+        }
+        if(!args.Version.IsRelease)
+        {
+            needUpload = false;
+            message = "Version is not Release";
+        }
+        if(args.Version.IsPullRequest)
+        {
+            needUpload = false;
+            message = "PR not allowed to upload";
+        }
+    }
+
+    if(!needUpload)
+    {
+        args.Context.Warning($"UploadPackages cancelled. {message}");
+        return;
+    }
+
+    UploadPackages(args);
+}
+
 public static void UploadPackages(this ScriptArgs args)
 {
     var context = args.Context;
