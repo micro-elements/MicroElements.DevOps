@@ -37,6 +37,9 @@ public class ScriptArgs
     [Description("Directory that contains test projects.")]
     public ScriptParam<DirectoryPath> TestDir {get; set;}
 
+    [Description("Optional GetTestProjectsFunc gets test projects.")]
+    public Func<IReadOnlyList<FilePath>> GetTestProjectsFunc {get; set;}
+
     [Description("Directory for storing build artifacts.")]
     public ScriptParam<DirectoryPath> ArtifactsDir {get; set;}
 

@@ -9,9 +9,18 @@
 /// </summary>
 public static IReadOnlyList<FilePath> GetTestProjects(this ScriptArgs args)
 {
-    var projectsMask = $"{args.TestDir}/**/*.csproj";
-    var testProjects = args.Context.GetFiles(projectsMask).ToList();
-    args.Context.Information($"TestProjectsMask: {projectsMask}, Found: {testProjects.Count} test project(s).");
+    IReadOnlyList<FilePath> testProjects = Array.Empty<FilePath>();
+    if(args.GetTestProjectsFunc!=null)
+    {
+        testProjects = args.GetTestProjectsFunc();
+        args.Context.Information($"GetTestProjects by GetTestProjectsFunc: Found: {testProjects.Count} test project(s).");
+    }
+    else
+    {
+        var testProjectsMask = $"{args.TestDir}/**/*.csproj";
+        testProjects = args.Context.GetFiles(testProjectsMask).ToList();
+        args.Context.Information($"TestProjectsMask: {testProjectsMask}, Found: {testProjects.Count} test project(s).");
+    }
     return testProjects;
 }
 
