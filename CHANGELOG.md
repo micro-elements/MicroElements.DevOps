@@ -1,7 +1,5 @@
 # 1.10.0
 - Changed: coverlet.msbuild updated to 2.6.1
-- Changed: Cake.Figlet updated to 1.3.0
-- Changed: Cake updated to 0.33.0
 - Changed: ArgumentOrEnvVar compares arg name ignoring case
 
 # 1.9.0

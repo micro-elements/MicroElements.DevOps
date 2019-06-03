@@ -20,7 +20,7 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.33.0"
+$CAKE_VERSION = "0.29.0"
 $CAKE_BAKERY_VERSION = "0.4.1"
 $DEVOPS_VERSION = "1.10.0"
 $NUGET_URL = "https://api.nuget.org/v3/index.json"
