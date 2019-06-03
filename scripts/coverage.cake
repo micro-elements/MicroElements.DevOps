@@ -1,5 +1,5 @@
 #load imports.cake
-#addin nuget:?package=Cake.Coverlet&version=2.3.4
+#addin nuget:?package=Cake.Coverlet&version=2.1.1
 //#addin nuget:?package=Cake.Coveralls
 //#tool nuget:?package=coveralls.net&version=0.7.0
 

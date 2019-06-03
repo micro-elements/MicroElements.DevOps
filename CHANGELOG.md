@@ -1,4 +1,5 @@
-# 1.10.0
+# 1.9.1
+- Changed: Cake.Coverlet version fixed to 2.1.1
 - Changed: coverlet.msbuild updated to 2.6.1
 - Changed: ArgumentOrEnvVar compares arg name ignoring case
 
