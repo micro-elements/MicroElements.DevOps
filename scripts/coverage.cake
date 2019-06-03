@@ -1,5 +1,5 @@
 #load imports.cake
-#addin nuget:?package=Cake.Coverlet
+#addin nuget:?package=Cake.Coverlet&version=2.3.4
 //#addin nuget:?package=Cake.Coveralls
 //#tool nuget:?package=coveralls.net&version=0.7.0
 
@@ -17,7 +17,7 @@ public static void RunCoverage(this ScriptArgs args)
 public static ScriptArgs UseCoverlet(this ScriptArgs args)
 {
     args.CoverageTask = (a) => RunCoverlet(a);
-    //needs <PackageReference Include="coverlet.msbuild" Version="2.5.0" PrivateAssets="All" /> 
+    //needs <PackageReference Include="coverlet.msbuild" Version="2.6.1" PrivateAssets="All" /> 
     return args;
 }
 

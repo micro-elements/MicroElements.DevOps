@@ -6,7 +6,7 @@
 
 echo "Starting build.sh"
 
-CAKE_VERSION=0.29.0
+CAKE_VERSION=0.33.0
 NUGET_URL=https://api.nuget.org/v3/index.json
 
 # Define directories.

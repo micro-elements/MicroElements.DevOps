@@ -349,7 +349,7 @@ public static void RequireTool(this ScriptArgs args, string tool)
 /// </summary>
 public static ScriptArgs PrintHeader(this ScriptArgs args, string[] headers = null)
 {
-    #addin nuget:?package=Cake.Figlet&version=1.1.0
+    #addin nuget:?package=Cake.Figlet&version=1.3.0
 
     headers = headers ?? new [] {"------------", "MicroElements", "DevOps", "------------"};
 

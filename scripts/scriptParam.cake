@@ -335,7 +335,7 @@ public class ScriptParam<T> : IScriptParam
             emptyValues == null || emptyValues.All(emptyValue => !Equals(value, emptyValue));
 
         ScriptArgsPredicate HasValidArgument = a =>
-            a.Context.HasArgument(Name) && ValueIsNotEmpty(a.Context.Argument<string>(Name), EmptyValues);
+            (a.Context.HasArgument(Name) || a.Context.HasArgument(Name?.ToUpper())) && ValueIsNotEmpty(a.Context.Argument<string>(Name), EmptyValues);
 
         ScriptArgsPredicate HasValidEnvVar = a =>
             a.HasEnvironmentVariableIgnoreCase(Name) && ValueIsNotEmpty(a.EnvironmentVariableIgnoreCase(Name), EmptyValues);
