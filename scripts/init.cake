@@ -48,7 +48,7 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
     else
     {
         var content = GetTemplate(args, "dotnet-tools.json");
-        context.CreateDirectory(".config");
+        context.CreateDirectory(args.RootDir+".config");
         System.IO.File.WriteAllText(dotnet_tools_file_name, content);
         context.Information($"{dotnet_tools_file_name} created.");
     }
