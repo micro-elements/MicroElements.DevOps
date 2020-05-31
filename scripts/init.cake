@@ -42,6 +42,17 @@ public static void CreateCommonProjectFiles(this ScriptArgs args)
 {
     var context = args.Context;
 
+    var dotnet_tools_file_name = args.RootDir.Value.CombineWithFilePath(".config/dotnet-tools.json").FullPath;
+    if(context.FileExists(dotnet_tools_file_name))
+        context.Information(".config/dotnet-tools.json file already exists.");
+    else
+    {
+        var content = GetTemplate(args, "dotnet-tools.json");
+        context.CreateDirectory(".config");
+        System.IO.File.WriteAllText(dotnet_tools_file_name, content);
+        context.Information($"{dotnet_tools_file_name} created.");
+    }
+
     var version_props_file_name = args.KnownFiles.VersionProps.Value.FullPath;
     if(context.FileExists(version_props_file_name))
         context.Information($"{version_props_file_name} file already exists.");

@@ -51,8 +51,6 @@ public static void DotNetToolInstall(this ScriptArgs args, string toolName, stri
             .Append($"--version {version}")
             .Append($"--tool-path \"{args.ToolsDir}\""), printOutput: true
             );
-    //csmacnz.Coveralls.exe
-    //args.Context.Tools.RegisterFile()
 }
 
 public static void PrintCoverallsInfo(this ScriptArgs args)
@@ -60,9 +58,9 @@ public static void PrintCoverallsInfo(this ScriptArgs args)
     var context = args.Context;
 
     //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
-    args.DotNetToolInstall("coveralls.net", "1.0.0");
+    args.DotNetToolInstall("coveralls.net", "2.0.0-beta.2");
 
-    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
         new ProcessArgumentBuilder().Append("--help"), printOutput: true);
 }
 
@@ -76,7 +74,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
     //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
     args.DotNetToolInstall("coveralls.net", "1.0.0");
 
-    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
         new ProcessArgumentBuilder().Append("--version"), printOutput: true);
 
     if(!coverallsRepoToken.HasValue)
@@ -106,7 +104,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 
 
 
-        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls", new ProcessArgumentBuilder()
+        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls", new ProcessArgumentBuilder()
             .Append("--opencover")
             .Append("--repoToken ").AppendSecret(coverallsRepoToken)
             .Append($"--input {file.FullPath}"),
