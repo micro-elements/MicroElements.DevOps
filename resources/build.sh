@@ -6,7 +6,7 @@
 
 echo "Starting build.sh"
 
-DEVOPS_VERSION=1.9.1
+DEVOPS_VERSION=1.11.0
 NUGET_URL=https://api.nuget.org/v3/index.json
 
 # Define directories.

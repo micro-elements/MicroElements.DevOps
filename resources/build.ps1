@@ -20,9 +20,8 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.29.0"
-$CAKE_BAKERY_VERSION = "0.4.1"
-$DEVOPS_VERSION = "1.9.1"
+$CAKE_VERSION = "0.38.0"
+$DEVOPS_VERSION = "1.11.0"
 $NUGET_URL = "https://api.nuget.org/v3/index.json"
 $NUGET_BETA_URL = "https://www.myget.org/F/micro-elements/api/v3/index.json"
 #$NUGET_URL = "file://C:\NuGet"
@@ -40,7 +39,6 @@ $cake_props = @"
 </PropertyGroup>
 <ItemGroup>
   <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
-  <PackageReference Include="Cake.Bakery" Version="$CAKE_BAKERY_VERSION" />
   <PackageReference Include="MicroElements.DevOps" Version="$DEVOPS_VERSION" />
 </ItemGroup>
 </Project>

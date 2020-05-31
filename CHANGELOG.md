@@ -1,3 +1,6 @@
+# 1.11.0
+- Updated libs
+
 # 1.10.0
 - Updated libs
 - Changed: Cake.Coverlet version fixed to 2.4.2
