@@ -14,7 +14,7 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/tools
 
 # Script to run.
-SCRIPT=$TOOLS_DIR/microelements.devops/$DEVOPS_VERSION/scripts/main.cake
+SCRIPT=build.cake
 
 CAKE_PROPS_PATH=$TOOLS_DIR/cake.props
 CAKE_VERSION="0.38.0"
