@@ -20,7 +20,7 @@ if(!$PSScriptRoot){
     $PSScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
 }
 
-$CAKE_VERSION = "0.29.0"
+$CAKE_VERSION = "0.34.1"
 $CAKE_BAKERY_VERSION = "0.4.1"
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
@@ -32,7 +32,6 @@ $cake_props = @"
   <TargetFramework>netstandard2.0</TargetFramework>
 </PropertyGroup>
 <ItemGroup>
-  <PackageReference Include="Cake.CoreCLR" Version="$CAKE_VERSION" />
   <PackageReference Include="Cake.Bakery" Version="$CAKE_BAKERY_VERSION" />
 </ItemGroup>
 </Project>
@@ -47,7 +46,9 @@ if(!(Test-Path $cake_props_path))
 }
 
 # Restore Cake
-&dotnet restore $cake_props_path --packages $TOOLS_DIR
+&dotnet tool restore
+&dotnet nuget install Cake.Bakery -OutputDirectory $TOOLS_DIR
+#&dotnet restore $cake_props_path --packages $TOOLS_DIR
 
 $cakeArguments = @("$Script");
 if ($Target) { $cakeArguments += "-target=$Target" }
@@ -59,5 +60,5 @@ $cakeArguments += $ScriptArgs
 # Start Cake
 Write-Host "Running build script..."
 Write-Host "CakeArguments: $cakeArguments"
-&dotnet $CAKE_DLL $cakeArguments
+&dotnet-cake $cakeArguments
 exit $LASTEXITCODE
