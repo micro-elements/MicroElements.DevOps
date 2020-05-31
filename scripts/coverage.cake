@@ -1,7 +1,5 @@
 #load imports.cake
-#addin nuget:?package=Cake.Coverlet&version=2.2.1
-//#addin nuget:?package=Cake.Coveralls
-//#tool nuget:?package=coveralls.net&version=0.7.0
+#addin nuget:?package=Cake.Coverlet&version=2.4.2
 
 public static void RunCoverage(this ScriptArgs args)
 {
@@ -64,7 +62,7 @@ public static void PrintCoverallsInfo(this ScriptArgs args)
     //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
     args.DotNetToolInstall("coveralls.net", "1.0.0");
 
-    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
         new ProcessArgumentBuilder().Append("--help"), printOutput: true);
 }
 
@@ -78,7 +76,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
     //dotnet tool install coveralls.net --version 1.0.0 --tool-path tools
     args.DotNetToolInstall("coveralls.net", "1.0.0");
 
-    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls",
+    args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls",
         new ProcessArgumentBuilder().Append("--version"), printOutput: true);
 
     if(!coverallsRepoToken.HasValue)
@@ -108,7 +106,7 @@ public static void UploadCoverageReportsToCoveralls(this ScriptArgs args)
 
 
 
-        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.Coveralls", new ProcessArgumentBuilder()
+        args.Context.StartProcessAndReturnOutput($"{args.ToolsDir}/csmacnz.coveralls", new ProcessArgumentBuilder()
             .Append("--opencover")
             .Append("--repoToken ").AppendSecret(coverallsRepoToken)
             .Append($"--input {file.FullPath}"),
